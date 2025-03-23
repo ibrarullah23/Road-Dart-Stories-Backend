@@ -24,8 +24,22 @@ export const bulkCreateBusinesses = async (req, res) => {
 // Get all businesses
 export const getAllBusinesses = async (req, res) => {
   try {
-    const businesses = await Business.find();
-    res.status(200).json(businesses);
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+
+    const skip = (page - 1) * limit;
+
+    const businesses = await Business.find().skip(skip).limit(limit);
+    const totalItems = await Business.countDocuments();
+    const totalPages = Math.ceil(totalItems / limit);
+
+    res.status(200).json({
+      data: businesses,
+      totalItems,
+      totalPages,
+      page,
+      limit,
+    });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
