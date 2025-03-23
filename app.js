@@ -10,10 +10,9 @@ app.use(express.json());
 connectDB();
 
 // Routes
-app.get('/', (req, res) => res.send('Welcome to ES6 Vercel Backend!'));
-app.use('/api/users', userRoutes);
+app.get('/', (req, res) => res.json({ message: 'API is running on PORT:' + process.env.PORT }));
 
-app.listen(PORT, () => {
+app.listen(process.env.PORT, () => {
     console.log(`✅ Server is running on port ${process.env.PORT}`);
 })
 
