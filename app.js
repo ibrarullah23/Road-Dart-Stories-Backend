@@ -22,7 +22,7 @@ app.use(cors({ origin: "*" })); // Enable CORS for all origins
 connectDB();
 
 // Routes
-app.get('/', (req, res) => res.json({ message: "✅ API is running..." }));
+app.get('/', (req, res) => res.json({ message: "✅ API is running... 3" }));
 app.use('/api/businesses', businessRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/auth', authRoutes);
