@@ -1,21 +1,11 @@
 import User from '../models/User.js';
-
-// // Create User
-// export const createUser = async (req, res) => {
-//     try {
-//         const user = new User(req.body);
-//         await user.save();
-//         res.status(201).json(user);
-//     } catch (err) {
-//         res.status(400).json({ message: err.message });
-//     }
-// };
+import { cleanFields } from '../utils/helper.js';
 
 // Get all users with pagination
 export const getAllUsers = async (req, res) => {
     try {
         const { fields = '', page = 1, limit = 10 } = req.query;
-        const projection = cleanFields(fields);
+        const projection = cleanFields(fields) + ' -password -__v';
         const skip = (page - 1) * limit;
 
         const users = await User.find().select(projection).skip(skip).limit(limit);
@@ -38,7 +28,7 @@ export const getAllUsers = async (req, res) => {
 // Get Single User
 export const getUser = async (req, res) => {
     try {
-        const user = await User.findById(req.params.id);
+        const user = await User.findById(req.params.id).select('-password -__v');
         if (!user) return res.status(404).json({ message: 'User not found' });
         res.status(200).json(user);
     } catch (err) {
@@ -49,9 +39,12 @@ export const getUser = async (req, res) => {
 // Update User
 export const updateUser = async (req, res) => {
     try {
-        const user = await User.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+        const user = await User.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true }).select('-password -__v');
         if (!user) return res.status(404).json({ message: 'User not found' });
-        res.status(200).json(user);
+        res.status(200).json({
+            message: 'User updated successfully',
+            user
+        });
     } catch (err) {
         res.status(400).json({ message: err.message });
     }
