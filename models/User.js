@@ -10,7 +10,7 @@ const userSchema = new Schema({
     dob: { type: Date },
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true},
-    username: { type: String,  unique: true  },
+    username: { type: String, unique: true  },
     address: {
         state: String,
         city: String,

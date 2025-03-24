@@ -1,5 +1,6 @@
 import User from '../models/User.js';
 import { cleanFields } from '../utils/helper.js';
+import mongoose from 'mongoose';
 
 // Get all users with pagination
 export const getAllUsers = async (req, res) => {
@@ -28,7 +29,15 @@ export const getAllUsers = async (req, res) => {
 // Get Single User
 export const getUser = async (req, res) => {
     try {
-        const user = await User.findById(req.params.id).select('-password -__v');
+        const { id } = req.params;
+        // const user = await User.findById(req.params.id).select('-password -__v');
+        const user = await User.findOne({
+            $or: [
+                { _id: mongoose.Types.ObjectId.isValid(id) ? id : null },
+              { username: id }
+            ]
+          }).select('-password -__v');
+
         if (!user) return res.status(404).json({ message: 'User not found' });
         res.status(200).json(user);
     } catch (err) {
