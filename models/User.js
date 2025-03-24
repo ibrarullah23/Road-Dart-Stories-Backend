@@ -10,7 +10,7 @@ const userSchema = new Schema({
     dob: { type: Date },
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true},
-    username: { type: String, required: true, unique: true },
+    username: { type: String, unique: true  },
     address: {
         state: String,
         city: String,
@@ -38,8 +38,6 @@ userSchema.pre('save', async function (next) {
             const salt = await bcrypt.genSalt(10);
             this.password = await bcrypt.hash(this.password, salt);
         }
-
-
 
         // Username Handling
         if (this.isNew || this.isModified('username')) {
