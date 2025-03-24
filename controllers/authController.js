@@ -1,7 +1,7 @@
-// controllers/authController.js
 import User from '../models/User.js';
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
+import bcrypt from "bcryptjs";
+import { generateAccessToken } from '../utils/helper.js';
+
 
 export const signup = async (req, res) => {
     try {
@@ -17,27 +17,81 @@ export const signup = async (req, res) => {
 
         res.status(201).json({ message: "User registered successfully" });
     } catch (err) {
+        console.log(err);
         res.status(500).json({ message: err.message });
     }
 };
 
-export const login = async (req, res) => {
-    try {
-        const { email, password } = req.body;
+// export const login = async (req, res) => {
+//     try {
+//         const { email, password } = req.body;
 
-        const user = await User.findOne({ email });
-        if (!user) return res.status(404).json({ message: "User not found" });
+//         const user = await User.findOne({ email });
+//         if (!user) return res.status(404).json({ message: "User not found" });
+
+//         const isMatch = await bcrypt.compare(password, user.password);
+//         if (!isMatch) return res.status(400).json({ message: "Invalid credentials" });
+
+//         const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1d' });
+
+//         res.status(200).json({ token, user: { id: user._id, username: user.username, email: user.email } });
+//     } catch (err) {
+//         res.status(500).json({ message: err.message });
+//     }
+// };
+
+
+
+export const loginUser = async (req, res) => {
+    try {
+        const { identifier, password } = req.body;
+
+        if (!identifier || !password) {
+            return res.status(400).json({ message: "Please provide identifier and password." });
+        }
+
+        const user = await User.findOne({
+            $or: [
+                { email: identifier },
+                { username: identifier }
+            ]
+        });
+
+        if (!user) {
+            return res.status(404).json({ message: "User Not Found!" });
+        }
 
         const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch) return res.status(400).json({ message: "Invalid credentials" });
+        if (!isMatch) {
+            return res.status(401).json({ message: "Wrong Password!" });
+        }
 
-        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1d' });
 
-        res.status(200).json({ token, user: { id: user._id, username: user.username, email: user.email } });
+        // Cookie options
+        const cookieOptions = {
+            httpOnly: true,
+            path: '/'
+        };
+
+
+        const token = generateAccessToken(user);
+
+        res
+            .cookie('token', token, cookieOptions)
+            // .cookie('refreshToken', refreshToken, cookieOptions)
+            .status(200)
+            .json({
+                message: "Login Successful"
+            });
+
     } catch (err) {
-        res.status(500).json({ message: err.message });
+        console.error(err);
+        res.status(500).json({ message: "Internal Server Error" });
     }
 };
+
+
+
 
 export const logout = (req, res) => {
     // For token-based auth, logout is handled on frontend (token removal)

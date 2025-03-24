@@ -1,14 +1,15 @@
 import mongoose from 'mongoose';
+import bcrypt from "bcryptjs";
 
 const { Schema, model } = mongoose;
 
 const userSchema = new Schema({
     firstname: { type: String, required: true },
     lastname: { type: String, required: true },
-    gender: { type: String, enum: ['Male', 'Female', 'Other'], required: true },
-    dob: { type: Date, required: true },
+    gender: { type: String, enum: ['Male', 'Female', 'Other'] },
+    dob: { type: Date },
     email: { type: String, required: true, unique: true },
-    password: { type: String, required: true, select: false },
+    password: { type: String, required: true},
     username: { type: String, required: true, unique: true },
     address: {
         state: String,
@@ -73,9 +74,9 @@ userSchema.pre('save', async function (next) {
 
 
 /** Method to compare password */
-userSchema.methods.comparePassword = async function (candidatePassword) {
-    return bcrypt.compare(candidatePassword, this.pass);
-};
+// userSchema.methods.comparePassword = async function (candidatePassword) {
+//     return bcrypt.compare(candidatePassword, this.pass);
+// };
 
 const User = model('User', userSchema);
 
