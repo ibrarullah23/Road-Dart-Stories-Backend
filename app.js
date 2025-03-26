@@ -2,10 +2,7 @@ import express from 'express';
 import dotenv from 'dotenv';
 import connectDB from './config/db.js';
 import cors from 'cors';
-import businessRoutes from './routes/businessRoutes.js';
-import userRoutes from './routes/userRoutes.js';
-import authRoutes from './routes/authRoutes.js';
-import contactRoutes from './routes/contactRoutes.js';
+
 
 
 dotenv.config();
@@ -21,12 +18,43 @@ app.use(cors({ origin: "*" })); // Enable CORS for all origins
 // DB Connection
 connectDB();
 
-// Routes
+// -------------------- Google OAuth --------------------
+import passport from "passport";
+router.get("/google", passport.authenticate("google", { scope: ["profile", "email"] })); // Login, Redirect to Google for OAuth
+
+router.get("/auth/google/callback", (req, res) => {
+    const { user, accessToken, refreshToken } = req.authInfo; // Comes from Passport `done()`
+
+    // Cookie options
+    const cookieOptions = {
+        httpOnly: true,
+        path: '/'
+    };
+
+
+    res.cookie('accessToken', accessToken, cookieOptions)
+        .cookie('refreshToken', refreshToken, cookieOptions)
+        .status(200)
+        .json({
+            message: "Login Successful"
+        });
+});
+
+
+// =========================== Routes ===========================
+import businessRoutes from './routes/businessRoutes.js';
+import userRoutes from './routes/userRoutes.js';
+import authRoutes from './routes/authRoutes.js';
+import contactRoutes from './routes/contactRoutes.js';
+
 app.get('/', (req, res) => res.json({ message: "✅ API is running... 3" }));
 app.use('/api/businesses', businessRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/contactus', contactRoutes);
+
+
+// =========================== Routes ===========================
 
 
 app.use((req, res, next) => {

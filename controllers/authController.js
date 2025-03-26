@@ -1,6 +1,7 @@
 import User from '../models/User.js';
 import bcrypt from "bcryptjs";
 import { generateAccessToken } from '../utils/helper.js';
+import { generateRefreshToken } from './../utils/helper';
 
 
 export const signup = async (req, res) => {
@@ -74,11 +75,13 @@ export const loginUser = async (req, res) => {
         };
 
 
-        const token = generateAccessToken(user);
+        // Generate JWT tokens
+        const accessToken = generateAccessToken(user);
+        const refreshToken = generateRefreshToken(user);
 
         res
-            .cookie('token', token, cookieOptions)
-            // .cookie('refreshToken', refreshToken, cookieOptions)
+            .cookie('accessToken', accessToken, cookieOptions)
+            .cookie('refreshToken', refreshToken, cookieOptions)
             .status(200)
             .json({
                 message: "Login Successful"

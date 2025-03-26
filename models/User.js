@@ -4,8 +4,8 @@ import bcrypt from "bcryptjs";
 const { Schema, model } = mongoose;
 
 const userSchema = new Schema({
-    firstname: { type: String, required: true },
-    lastname: { type: String, required: true },
+    firstName: { type: String, required: true },
+    lastName: { type: String, required: true },
     gender: { type: String, enum: ['Male', 'Female', 'Other'] },
     dob: { type: Date },
     email: { type: String, required: true, unique: true },
@@ -27,7 +27,8 @@ const userSchema = new Schema({
         type: String,
         enum: ['admin', 'user', 'owner'],
         default: 'user'
-    }
+    },
+    refreshToken : { type: String }
 }, { timestamps: true });
 
 
