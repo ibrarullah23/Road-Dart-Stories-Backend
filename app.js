@@ -16,7 +16,10 @@ const app = express();
 // ===== MIDDLEWARES =====
 app.use(express.json()); // Parse JSON bodies
 app.use(express.urlencoded({ extended: true }));
-app.use(cors({ origin: "*" })); // Enable CORS for all origins
+app.use(cors({
+    origin: process.env.ALLOWED_ORIGIN, // Specify frontend URL , * for all origins
+    credentials: true, // Allow cookies to be sent
+}));
 
 // DB Connection
 connectDB();

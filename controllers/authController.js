@@ -1,6 +1,7 @@
 import User from '../models/User.js';
 import bcrypt from "bcryptjs";
 import { generateAccessToken } from '../utils/helper.js';
+import { cookieOptions } from '../config/cookieOptions.js';
 
 
 export const signup = async (req, res) => {
@@ -18,28 +19,14 @@ export const signup = async (req, res) => {
         res.status(201).json({ message: "User registered successfully" });
     } catch (err) {
         console.log(err);
-        res.status(500).json({ message: err.message });
+        res.status(500).json({
+            error: {
+                message: "Server error",
+                details: err.message
+            }
+        });
     }
 };
-
-// export const login = async (req, res) => {
-//     try {
-//         const { email, password } = req.body;
-
-//         const user = await User.findOne({ email });
-//         if (!user) return res.status(404).json({ message: "User not found" });
-
-//         const isMatch = await bcrypt.compare(password, user.password);
-//         if (!isMatch) return res.status(400).json({ message: "Invalid credentials" });
-
-//         const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1d' });
-
-//         res.status(200).json({ token, user: { id: user._id, username: user.username, email: user.email } });
-//     } catch (err) {
-//         res.status(500).json({ message: err.message });
-//     }
-// };
-
 
 
 export const loginUser = async (req, res) => {
@@ -66,18 +53,10 @@ export const loginUser = async (req, res) => {
             return res.status(401).json({ message: "Wrong Password!" });
         }
 
-
-        // Cookie options
-        const cookieOptions = {
-            httpOnly: true,
-            path: '/'
-        };
-
-
         const token = generateAccessToken(user);
 
         res
-            .cookie('token', token, cookieOptions)
+            .cookie('accessToken', token, cookieOptions)
             // .cookie('refreshToken', refreshToken, cookieOptions)
             .status(200)
             .json({
@@ -86,7 +65,12 @@ export const loginUser = async (req, res) => {
 
     } catch (err) {
         console.error(err);
-        res.status(500).json({ message: "Internal Server Error" });
+        res.status(500).json({
+            error: {
+                message: "Server error",
+                details: err.message
+            }
+        });
     }
 };
 
