@@ -60,7 +60,8 @@ export const loginUser = async (req, res) => {
             // .cookie('refreshToken', refreshToken, cookieOptions)
             .status(200)
             .json({
-                message: "Login Successful"
+                message: "Login Successful",
+                data: user,
             });
 
     } catch (err) {
