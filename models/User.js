@@ -9,8 +9,8 @@ const userSchema = new Schema({
     gender: { type: String, enum: ['Male', 'Female', 'Other'] },
     dob: { type: Date },
     email: { type: String, required: true, unique: true },
-    password: { type: String, required: true},
-    username: { type: String, unique: true  },
+    password: { type: String, required: true },
+    username: { type: String, unique: true },
     address: {
         state: String,
         city: String,
@@ -28,7 +28,7 @@ const userSchema = new Schema({
         enum: ['admin', 'user', 'owner'],
         default: 'user'
     },
-    refreshToken : { type: String }
+    refreshToken: { type: String, select: false } 
 }, { timestamps: true });
 
 

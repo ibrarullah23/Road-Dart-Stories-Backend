@@ -2,7 +2,7 @@ import express from 'express';
 import dotenv from 'dotenv';
 import connectDB from './config/db.js';
 import cors from 'cors';
-
+import cookieParser from 'cookie-parser';
 
 
 dotenv.config();
@@ -11,6 +11,7 @@ dotenv.config();
 const app = express();
 
 // ===== MIDDLEWARES =====
+app.use(cookieParser ()); 
 app.use(express.json()); // Parse JSON bodies
 app.use(express.urlencoded({ extended: true }));
 
@@ -34,27 +35,7 @@ app.use(cors({
 // DB Connection
 connectDB();
 
-// -------------------- Google OAuth --------------------
-import passport from "passport";
-router.get("/google", passport.authenticate("google", { scope: ["profile", "email"] })); // Login, Redirect to Google for OAuth
 
-router.get("/auth/google/callback", (req, res) => {
-    const { user, accessToken, refreshToken } = req.authInfo; // Comes from Passport `done()`
-
-    // Cookie options
-    const cookieOptions = {
-        httpOnly: true,
-        path: '/'
-    };
-
-
-    res.cookie('accessToken', accessToken, cookieOptions)
-        .cookie('refreshToken', refreshToken, cookieOptions)
-        .status(200)
-        .json({
-            message: "Login Successful"
-        });
-});
 
 
 // =========================== Routes ===========================

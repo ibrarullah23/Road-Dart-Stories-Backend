@@ -11,7 +11,7 @@ passport.use(
         {
             clientID: process.env.GOOGLE_CLIENT_ID,
             clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-            callbackURL: "/auth/google/callback",
+            callbackURL: "/api/auth/google/callback", 
         },
         async (accessToken, refreshToken, profile, done) => {
             try {
@@ -33,14 +33,14 @@ passport.use(
                 }
 
                 // Generate JWT tokens
-                const accessToken = generateAccessToken(user);
+                const token = generateAccessToken(user);
                 const refreshToken = generateRefreshToken(user);
 
                 // Store refresh token in the database
                 user.refreshToken = refreshToken;
                 await user.save();
 
-                done(null, { user, accessToken, refreshToken });
+                done(null, { user, token, refreshToken });
             } catch (error) {
                 done(error, null);
             }

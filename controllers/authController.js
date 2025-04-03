@@ -1,8 +1,8 @@
 import User from '../models/User.js';
 import bcrypt from "bcryptjs";
-import { generateAccessToken } from '../utils/helper.js';
-import { generateRefreshToken } from './../utils/helper';
+import { generateAccessToken, generateRefreshToken } from '../utils/helper.js';
 import { cookieOptions } from '../config/cookieOptions.js';
+import _ from 'lodash';
 
 
 export const signup = async (req, res) => {
@@ -28,6 +28,18 @@ export const signup = async (req, res) => {
         });
     }
 };
+
+export const googleAuth = async (req, res) => {
+    const { user, token, refreshToken } = req.authInfo; // Comes from Passport `done()`
+
+    res.cookie('token', token, cookieOptions)
+        .cookie('refreshToken', refreshToken, cookieOptions)
+        .status(200)
+        .json({
+            message: "Login Successful via Google",
+            data: user,
+        });
+}
 
 
 export const loginUser = async (req, res) => {
@@ -56,16 +68,22 @@ export const loginUser = async (req, res) => {
 
 
         // Generate JWT tokens
-        const accessToken = generateAccessToken(user);
+        const token = generateAccessToken(user);
         const refreshToken = generateRefreshToken(user);
 
+        // Save refreshToken in the user document
+        user.refreshToken = refreshToken;
+        await user.save();
+        
+        const sanitizedUser = _.omit(user.toObject(), ['password', 'refreshToken']);
+
         res
-            .cookie('accessToken', accessToken, cookieOptions)
+            .cookie('token', token, cookieOptions)
             .cookie('refreshToken', refreshToken, cookieOptions)
             .status(200)
             .json({
                 message: "Login Successful",
-                data: user,
+                data: sanitizedUser,
             });
 
     } catch (err) {
@@ -82,7 +100,11 @@ export const loginUser = async (req, res) => {
 
 
 
-export const logout = (req, res) => {
+export const logout = async (req, res) => {
     // For token-based auth, logout is handled on frontend (token removal)
+    await User.findByIdAndUpdate(req.user.id, { $unset: { refreshToken: "" } });
+    // Clear cookies
+    res.clearCookie('token', cookieOptions);
+    res.clearCookie('refreshToken', cookieOptions);
     res.status(200).json({ message: "Logged out successfully" });
 };

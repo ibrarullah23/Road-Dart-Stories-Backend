@@ -20,17 +20,17 @@ export const generateAccessToken = (user) => {
   );
 };
 
-// export const generateRefreshToken = (user) => {
-//   return jwt.sign(
-//     {
-//       id: user.id,
-//       username: user.username,
-//       role: user.role,
-//     },
-//     process.env.REFRESH_TOKEN_SECRET,
-//     {
-//       // REFRESH_TOKEN_SECRET is the secret key
-//       expiresIn: "7d", // expires in 12 hours
-//     }
-//   );
-// };
+export const generateRefreshToken = (user) => {
+  return jwt.sign(
+    {
+      id: user.id,
+      username: user.username,
+      role: user.role,
+    },
+    process.env.REFRESH_TOKEN_SECRET,
+    {
+      // REFRESH_TOKEN_SECRET is the secret key
+      expiresIn: "7d", // expires in 12 hours
+    }
+  );
+};
