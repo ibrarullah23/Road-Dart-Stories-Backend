@@ -13,7 +13,23 @@ const app = express();
 // ===== MIDDLEWARES =====
 app.use(express.json()); // Parse JSON bodies
 app.use(express.urlencoded({ extended: true }));
-app.use(cors({ origin: "*" })); // Enable CORS for all origins
+
+const allowedOrigins = [
+    "http://localhost:3000", // Local frontend
+    process.env.ALLOWED_ORIGIN  // Production frontend
+];
+
+
+app.use(cors({
+    origin: (origin, callback) => {
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true); // Allow request
+        } else {
+            callback(new Error("Not allowed by CORS")); // Block request
+        }
+    },
+    credentials: true, // Allow cookies to be sent
+}));
 
 // DB Connection
 connectDB();
