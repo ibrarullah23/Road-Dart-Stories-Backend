@@ -38,11 +38,12 @@ export const googleAuth = async (req, res) => {
 
         res.cookie('token', token, cookieOptions)
             .cookie('refreshToken', refreshToken, cookieOptions)
-            .status(200)
-            .json({
-                message: "Login Successful via Google",
-                data: sanitizedUser,
-            });
+        // .status(200)
+        // .json({
+        //     message: "Login Successful via Google",
+        //     data: sanitizedUser,
+        // });
+        res.redirect(`${process.env.ALLOWED_ORIGIN}?googleLogin=success`);
     } catch (error) {
         console.log(error);
         res.status(500).json({
@@ -53,6 +54,25 @@ export const googleAuth = async (req, res) => {
         });
     }
 }
+
+
+export const getMe = async (req, res) => {
+    try {
+        const user = await User.findById(req.user.id).select('-password');
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+        res.status(200).json({ data: user });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({
+            error: {
+                message: "Server error",
+                details: err.message
+            }
+        });
+    }
+};
 
 
 export const loginUser = async (req, res) => {
