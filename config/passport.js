@@ -1,8 +1,8 @@
 import passport from "passport";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import dotenv from "dotenv";
-import User from "./models/User.js"; // Import your user model
-import { generateAccessToken } from "../utils/helper.js";
+import { generateAccessToken, generateRefreshToken } from "../utils/helper.js";
+import User from "../models/User.js";
 
 dotenv.config();
 
@@ -11,7 +11,7 @@ passport.use(
         {
             clientID: process.env.GOOGLE_CLIENT_ID,
             clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-            callbackURL: "/api/auth/google/callback", 
+            callbackURL: "/api/auth/google/callback",
         },
         async (accessToken, refreshToken, profile, done) => {
             try {
@@ -26,8 +26,6 @@ passport.use(
                         firstName,
                         lastName,
                         email: profile.emails[0].value,
-                        password: null, // No password since using OAuth
-                        dob: null, // If not available
                         refreshToken: "",
                     });
                 }
@@ -40,7 +38,7 @@ passport.use(
                 user.refreshToken = refreshToken;
                 await user.save();
 
-                done(null, { user, token, refreshToken });
+                done(null, user, { token, refreshToken });
             } catch (error) {
                 done(error, null);
             }

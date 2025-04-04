@@ -1,8 +1,15 @@
+import businessRoutes from './routes/businessRoutes.js';
+import userRoutes from './routes/userRoutes.js';
+import authRoutes from './routes/authRoutes.js';
+import contactRoutes from './routes/contactRoutes.js';
+
 import express from 'express';
 import dotenv from 'dotenv';
 import connectDB from './config/db.js';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
+import passport from 'passport';
+import "./config/passport.js";  
 
 
 dotenv.config();
@@ -37,12 +44,10 @@ connectDB();
 
 
 
+app.use(passport.initialize());
+
 
 // =========================== Routes ===========================
-import businessRoutes from './routes/businessRoutes.js';
-import userRoutes from './routes/userRoutes.js';
-import authRoutes from './routes/authRoutes.js';
-import contactRoutes from './routes/contactRoutes.js';
 
 app.get('/', (req, res) => res.json({ message: "✅ API is running... 3" }));
 app.use('/api/businesses', businessRoutes);

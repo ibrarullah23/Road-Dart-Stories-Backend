@@ -10,8 +10,10 @@ export const signup = async (req, res) => {
         const { firstname, lastname, email, password, username } = req.body;
 
         // Check if email exists
-        const existingUser = await User.findOne({ email });
-        if (existingUser) return res.status(400).json({ message: "Email already exists" });
+        // const existingUser = await User.findOne({ email });
+        // if (existingUser) return res.status(400).json({ message: "Email already exists" });
+        // if (password.length < 8)
+        //     return res.status(400).json({ message: "Password must be at least 6 characters" });
 
         // Create User (password hashing handled in model pre-save)
         const user = new User({ firstname, lastname, email, password, username });
@@ -19,26 +21,37 @@ export const signup = async (req, res) => {
 
         res.status(201).json({ message: "User registered successfully" });
     } catch (err) {
-        console.log(err);
+        const message = Object.values(err.errors || {}).map(e => e.message).join(', ') || err.message
+        console.log(message);
         res.status(500).json({
-            error: {
-                message: "Server error",
-                details: err.message
-            }
+            error: { message }
         });
     }
 };
 
 export const googleAuth = async (req, res) => {
-    const { user, token, refreshToken } = req.authInfo; // Comes from Passport `done()`
+    try {
+        const user = req.user; // Comes from Passport `done()`
+        const { token, refreshToken } = req.authInfo; // Comes from Passport `done()`
 
-    res.cookie('token', token, cookieOptions)
-        .cookie('refreshToken', refreshToken, cookieOptions)
-        .status(200)
-        .json({
-            message: "Login Successful via Google",
-            data: user,
+        const sanitizedUser = _.omit(user.toObject(), ['password', 'refreshToken']);
+
+        res.cookie('token', token, cookieOptions)
+            .cookie('refreshToken', refreshToken, cookieOptions)
+            .status(200)
+            .json({
+                message: "Login Successful via Google",
+                data: sanitizedUser,
+            });
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({
+            error: {
+                message: "Server error",
+                details: error.message
+            }
         });
+    }
 }
 
 
@@ -74,7 +87,7 @@ export const loginUser = async (req, res) => {
         // Save refreshToken in the user document
         user.refreshToken = refreshToken;
         await user.save();
-        
+
         const sanitizedUser = _.omit(user.toObject(), ['password', 'refreshToken']);
 
         res

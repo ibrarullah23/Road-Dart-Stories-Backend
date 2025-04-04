@@ -4,13 +4,20 @@ import bcrypt from "bcryptjs";
 const { Schema, model } = mongoose;
 
 const userSchema = new Schema({
-    firstName: { type: String, required: true },
-    lastName: { type: String, required: true },
+    firstname: { type: String, required: true },
+    lastname: { type: String, required: true },
     gender: { type: String, enum: ['Male', 'Female', 'Other'] },
     dob: { type: Date },
-    email: { type: String, required: true, unique: true },
-    password: { type: String, required: true },
-    username: { type: String, unique: true },
+    email: { 
+        type: String, 
+        required: [true, 'Email is required'], 
+        unique: [true, 'Email already exists'] 
+    },
+    password: { 
+        type: String, 
+        minlength: [8, 'Password must be at least 8 characters long']
+    },
+    username: { type: String, unique: [true, "Username already exists"] },
     address: {
         state: String,
         city: String,
@@ -20,7 +27,10 @@ const userSchema = new Schema({
     socials: { type: Map, of: String },
     status: {
         type: String,
-        enum: ['verified', 'unverified', 'deleted'],
+        enum: {
+            values: ['verified', 'unverified', 'deleted'],
+            message: 'invalid status'
+        },
         default: 'unverified'
     },
     role: {
@@ -35,7 +45,7 @@ const userSchema = new Schema({
 userSchema.pre('save', async function (next) {
     try {
         // Hash password if modified
-        if (this.isModified('password')) {
+        if (this.password && this.isModified('password')) {
             const salt = await bcrypt.genSalt(10);
             this.password = await bcrypt.hash(this.password, salt);
         }
