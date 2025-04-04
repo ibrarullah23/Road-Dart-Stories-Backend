@@ -38,12 +38,12 @@ export const googleAuth = async (req, res) => {
 
         res.cookie('token', token, cookieOptions)
             .cookie('refreshToken', refreshToken, cookieOptions)
-            .status(200)
-            .json({
-                message: "Login Successful via Google",
-                data: sanitizedUser,
-            });
-        return res.redirect(`${process.env.ALLOWED_ORIGIN}?googleLogin=success`);
+        // .status(200)
+        // .json({
+        //     message: "Login Successful via Google",
+        //     data: sanitizedUser,
+        // });
+        res.redirect(`/?googleLogin=true`);
     } catch (error) {
         console.log(error);
         res.status(500).json({
