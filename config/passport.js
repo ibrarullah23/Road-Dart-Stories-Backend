@@ -16,15 +16,15 @@ passport.use(
         async (accessToken, refreshToken, profile, done) => {
             try {
                 // Extract first and last name from displayName
-                const [firstName, ...lastNameParts] = profile.displayName.split(" ");
-                const lastName = lastNameParts.join(" ") || null; // Handle cases with no last name
+                const [firstname, ...lastNameParts] = profile.displayName.split(" ");
+                const lastname = lastNameParts.join(" ") || null; // Handle cases with no last name
 
                 let user = await User.findOne({ email: profile.emails[0].value });
 
                 if (!user) {
                     user = await User.create({
-                        firstName,
-                        lastName,
+                        firstname,
+                        lastname,
                         email: profile.emails[0].value,
                         refreshToken: "",
                     });
@@ -40,6 +40,7 @@ passport.use(
 
                 done(null, user, { token, refreshToken });
             } catch (error) {
+                console.error("Error in Google Strategy:", error);
                 done(error, null);
             }
         }
