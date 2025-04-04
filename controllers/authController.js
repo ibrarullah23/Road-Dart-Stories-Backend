@@ -43,6 +43,7 @@ export const googleAuth = async (req, res) => {
                 message: "Login Successful via Google",
                 data: sanitizedUser,
             });
+        return res.redirect(`${process.env.ALLOWED_ORIGIN}?googleLogin=success`);
     } catch (error) {
         console.log(error);
         res.status(500).json({
