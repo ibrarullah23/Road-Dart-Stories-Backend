@@ -1,21 +1,5 @@
 import nodemailer from "nodemailer";
 
-// const generateEmail = asyncErrorHandler(async (data, title) => {
-
-//   const emailTemplate = await Email.findOne({ title: "Thankyou email 9" })
-
-//   return emailTemplate.replace(
-//     /{{(.*?)}}/g,
-//     (reference, perimeter) => data[perimeter] || reference
-//   );
-// });
-
-
-// in data
-// heading text buttonlink buttontext subject
-
-
-
 const sendMail = async (data) => {
 
     const header = `<!DOCTYPE html>
@@ -47,7 +31,7 @@ const sendMail = async (data) => {
         .container img {
           width: 100%;
           height: auto;
-          max-width: 480px;
+          max-width: 500px;
           display: block;
           margin: 0 auto;
         }
@@ -64,12 +48,12 @@ const sendMail = async (data) => {
           font-family: 'Bitter', serif;
           line-height: 1.4;
           margin: 10px 0;
+          weight: 400;
         }
     
         .button {
           display: inline-block;
-          background-color: #4a2279;
-          color: #fff;
+          background-color: #ebebeb;
           text-decoration: none;
           font-family: 'Ubuntu', sans-serif;
           font-weight: 700;
@@ -97,12 +81,12 @@ const sendMail = async (data) => {
 
     try {
 
-        const emailObj = data.html
+        // const emailObj = data.html
 
-        const emailContent = emailObj.replace(
-            /{{(.*?)}}/g,
-            (reference, perimeter) => data[perimeter] || reference
-        );
+        // const emailContent = emailObj.replace(
+        //     /{{(.*?)}}/g,
+        //     (reference, perimeter) => data[perimeter] || reference
+        // );
 
         const transporter = nodemailer.createTransport({
             service: "gmail",
@@ -115,14 +99,16 @@ const sendMail = async (data) => {
 
         const mailOptions = {
             from: process.env.EMAIL_USERNAME,
-            to: data.email,
-            subject: emailObj.subject,
+            to: data.recipient,
+            subject: data.subject,
             // text: "",
-            html: header + emailContent + `</div>` + footer,
+            html: header + data.html + `</div>` + footer,
         };
 
+        //subject recipent html
+
         const info = await transporter.sendMail(mailOptions);
-        console.log(data?.heading + " Email sent to ", data.email);
+        console.log(data.subject + " Email sent to ", data.recipient);
     } catch (error) {
         console.log("Error in mail.js", error.message);
     }
