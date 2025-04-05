@@ -20,8 +20,9 @@ passport.use(
                 const lastname = lastNameParts.join(" ") || null; // Handle cases with no last name
 
                 let user = await User.findOne({ email: profile.emails[0].value });
-
+                let isNewUser = false;
                 if (!user) {
+                    isNewUser = true;
                     user = await User.create({
                         firstname,
                         lastname,
@@ -38,7 +39,7 @@ passport.use(
                 user.refreshToken = refreshToken;
                 await user.save();
 
-                done(null, user, { token, refreshToken });
+                done(null, user, { token, refreshToken, isNewUser });
             } catch (error) {
                 console.error("Error in Google Strategy:", error);
                 done(error, null);

@@ -1,8 +1,11 @@
 import User from '../models/User.js';
 import bcrypt from "bcryptjs";
 import { generateAccessToken, generateRefreshToken } from '../utils/helper.js';
-import { cookieOptions } from '../config/cookieOptions.js';
+import { cookieOptions } from '../constants/cookieOptions.js';
 import _ from 'lodash';
+import sendMail from '../config/mail.js';
+import { WELCOME } from '../constants/emailTemplets.js';
+
 
 
 export const signup = async (req, res) => {
@@ -19,6 +22,8 @@ export const signup = async (req, res) => {
         const user = new User({ firstname, lastname, email, password, username });
         await user.save();
 
+
+
         res.status(201).json({ message: "User registered successfully" });
     } catch (err) {
         const message = Object.values(err.errors || {}).map(e => e.message).join(', ') || err.message
@@ -26,15 +31,22 @@ export const signup = async (req, res) => {
         res.status(500).json({
             error: { message }
         });
+    } finally {
+
+
+        sendMail(WELCOME(req.body.email, req.body.firstname))
     }
 };
 
 export const googleAuth = async (req, res) => {
     try {
         const user = req.user; // Comes from Passport `done()`
-        const { token, refreshToken } = req.authInfo; // Comes from Passport `done()`
+        const { token, refreshToken, isNewUser } = req.authInfo; // Comes from Passport `done()`
 
         const sanitizedUser = _.omit(user.toObject(), ['password', 'refreshToken']);
+
+        // if (isNewUser)
+            sendMail(WELCOME(user.email, user.firstname))
 
         res.cookie('token', token, cookieOptions)
             .cookie('refreshToken', refreshToken, cookieOptions)
@@ -43,7 +55,7 @@ export const googleAuth = async (req, res) => {
         //     message: "Login Successful via Google",
         //     data: sanitizedUser,
         // });
-        res.redirect(`${process.env.ALLOWED_ORIGIN}?googleLogin=success`);
+        res.redirect(`${process.env.ALLOWED_ORIGIN}?googleLogin = success`);
     } catch (error) {
         console.log(error);
         res.status(500).json({
