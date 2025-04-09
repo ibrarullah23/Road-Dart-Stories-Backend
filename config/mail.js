@@ -1,5 +1,6 @@
 import nodemailer from "nodemailer";
-
+import dotenv from "dotenv";
+dotenv.config();
 
 const transporter = nodemailer.createTransport({
   service: "gmail",
@@ -8,10 +9,14 @@ const transporter = nodemailer.createTransport({
     pass: process.env.EMAIL_PASSWORD,
   },
   connectionTimeout: 20000, // 20 seconds
+  debug: true,
+  logger: true,
 });
+
 
 const sendMail = async (data) => {
 
+  
   const header = `<!DOCTYPE html>
     <html lang="en">
     <head>

@@ -15,27 +15,25 @@ export const signup = async (req, res) => {
         // Check if email exists
         // const existingUser = await User.findOne({ email });
         // if (existingUser) return res.status(400).json({ message: "Email already exists" });
-        // if (password.length < 8)
-        //     return res.status(400).json({ message: "Password must be at least 6 characters" });
+        if (!password)
+            return res.status(400).json({ message: "Password is required" });
 
         // Create User (password hashing handled in model pre-save)
         const user = new User({ firstname, lastname, email, password, username });
         await user.save();
 
-
-
         res.status(201).json({ message: "User registered successfully" });
-    } catch (err) {
-        const message = Object.values(err.errors || {}).map(e => e.message).join(', ') || err.message
-        console.log(message);
+
+        
+        // sendMail(WELCOME(req.body.email, req.body.firstname))
+    } catch (error) {
+        console.log(error.message);
         res.status(500).json({
-            error: { message }
+            error: {
+                message: error.message,
+            }
         });
-    } finally {
-
-
-        sendMail(WELCOME(req.body.email, req.body.firstname))
-    }
+    } 
 };
 
 export const googleAuth = async (req, res) => {
