@@ -2,21 +2,44 @@ import nodemailer from "nodemailer";
 import dotenv from "dotenv";
 dotenv.config();
 
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: process.env.EMAIL_USERNAME,
-    pass: process.env.EMAIL_PASSWORD,
-  },
-  connectionTimeout: 20000, // 20 seconds
-  debug: true,
-  logger: true,
-});
+
+
+let transporter = null;
+
+// Create a singleton transporter instance
+const getTransporter = () => {
+  if (!transporter) {
+    transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.EMAIL_USERNAME,
+        pass: process.env.EMAIL_PASSWORD,
+      },
+      connectionTimeout: 10000,  // 10 seconds
+      greetingTimeout: 5000,     // 5 seconds
+      socketTimeout: 10000,
+      debug: true,
+      logger: true,
+    });
+  }
+  return transporter;
+};
+
 
 
 const sendMail = async (data) => {
+  // const transporter = nodemailer.createTransport({
+  //   service: "gmail",
+  //   auth: {
+  //     user: process.env.EMAIL_USERNAME,
+  //     pass: process.env.EMAIL_PASSWORD,
+  //   },
+  //   connectionTimeout: 20000, // 20 seconds
+  //   debug: true,
+  //   logger: true,
+  // });
 
-  
+
   const header = `<!DOCTYPE html>
     <html lang="en">
     <head>
@@ -115,6 +138,8 @@ const sendMail = async (data) => {
 
     //subject recipent html
 
+
+    const transporter = getTransporter();
     const info = await transporter.sendMail(mailOptions);
     console.log(data.subject + " Email sent to ", data.recipient);
   } catch (error) {
