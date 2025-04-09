@@ -28,16 +28,6 @@ const getTransporter = () => {
 
 
 const sendMail = async (data) => {
-  // const transporter = nodemailer.createTransport({
-  //   service: "gmail",
-  //   auth: {
-  //     user: process.env.EMAIL_USERNAME,
-  //     pass: process.env.EMAIL_PASSWORD,
-  //   },
-  //   connectionTimeout: 20000, // 20 seconds
-  //   debug: true,
-  //   logger: true,
-  // });
 
 
   const header = `<!DOCTYPE html>
@@ -140,6 +130,16 @@ const sendMail = async (data) => {
 
 
     const transporter = getTransporter();
+
+    transporter.verify((error, success) => {
+      if (error) {
+        console.log("Error in mail.js", error.message);
+      } else {
+        console.log("Server is ready to take our messages");
+      }
+    });
+
+
     const info = await transporter.sendMail(mailOptions);
     console.log(data.subject + " Email sent to ", data.recipient);
   } catch (error) {
