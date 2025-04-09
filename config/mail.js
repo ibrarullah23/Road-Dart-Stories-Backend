@@ -2,7 +2,7 @@ import nodemailer from "nodemailer";
 
 const sendMail = async (data) => {
 
-    const header = `<!DOCTYPE html>
+  const header = `<!DOCTYPE html>
     <html lang="en">
     <head>
       <meta charset="UTF-8">
@@ -69,49 +69,52 @@ const sendMail = async (data) => {
       <div class="container">
         <img src="https://ik.imagekit.io/zf0veufne/Road%20Dart/image.jpg?updatedAt=1743856127183" alt="Road Dart">
     `
-    const body = `    <h1>{{heading}}</h1>
+  const body = `    <h1>{{heading}}</h1>
     
         <p>{{text}}</p>
     
         <a href="{{buttonlink}}" class="button">{{buttontext}}</a>
     `
-    const footer = `</body>
+  const footer = `</body>
     </html>`
 
 
-    try {
+  try {
 
-        // const emailObj = data.html
+    // const emailObj = data.html
 
-        // const emailContent = emailObj.replace(
-        //     /{{(.*?)}}/g,
-        //     (reference, perimeter) => data[perimeter] || reference
-        // );
+    // const emailContent = emailObj.replace(
+    //     /{{(.*?)}}/g,
+    //     (reference, perimeter) => data[perimeter] || reference
+    // );
 
-        const transporter = nodemailer.createTransport({
-            service: "gmail",
-            auth: {
-                user: process.env.EMAIL_USERNAME,
-                pass: process.env.EMAIL_PASSWORD,
-            },
-        });
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.EMAIL_USERNAME,
+        pass: process.env.EMAIL_PASSWORD,
+      },
+      connectionTimeout: 5000, // 5 seconds timeout
+      logger: true,
+      debug: true,
+    });
 
 
-        const mailOptions = {
-            from: process.env.EMAIL_USERNAME,
-            to: data.recipient,
-            subject: data.subject,
-            // text: "",
-            html: header + data.html + `</div>` + footer,
-        };
+    const mailOptions = {
+      from: process.env.EMAIL_USERNAME,
+      to: data.recipient,
+      subject: data.subject,
+      // text: "",
+      html: header + data.html + `</div>` + footer,
+    };
 
-        //subject recipent html
+    //subject recipent html
 
-        const info = await transporter.sendMail(mailOptions);
-        console.log(data.subject + " Email sent to ", data.recipient);
-    } catch (error) {
-        console.log("Error in mail.js", error.message);
-    }
+    const info = await transporter.sendMail(mailOptions);
+    console.log(data.subject + " Email sent to ", data.recipient);
+  } catch (error) {
+    console.log("Error in mail.js", error.message);
+  }
 };
 
 export default sendMail;

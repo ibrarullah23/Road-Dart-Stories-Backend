@@ -45,7 +45,7 @@ export const googleAuth = async (req, res) => {
 
         const sanitizedUser = _.omit(user.toObject(), ['password', 'refreshToken']);
 
-        // if (isNewUser)
+        if (isNewUser)
             sendMail(WELCOME(user.email, user.firstname))
 
         res.cookie('token', token, cookieOptions)
@@ -55,7 +55,7 @@ export const googleAuth = async (req, res) => {
         //     message: "Login Successful via Google",
         //     data: sanitizedUser,
         // });
-        res.redirect(`${process.env.ALLOWED_ORIGIN}?googleLogin = success`);
+        res.redirect(`${process.env.ALLOWED_ORIGIN}?googleLogin=success`);
     } catch (error) {
         console.log(error);
         res.status(500).json({
