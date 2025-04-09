@@ -24,8 +24,7 @@ export const signup = async (req, res) => {
 
         res.status(201).json({ message: "User registered successfully" });
 
-
-        // sendMail(WELCOME(req.body.email, req.body.firstname))
+        sendMail(WELCOME(req.body.email, req.body.firstname))
     } catch (error) {
         console.log(error.message);
         res.status(500).json({
