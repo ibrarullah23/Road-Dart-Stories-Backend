@@ -24,7 +24,7 @@ export const signup = async (req, res) => {
 
         res.status(201).json({ message: "User registered successfully" });
 
-        
+
         // sendMail(WELCOME(req.body.email, req.body.firstname))
     } catch (error) {
         console.log(error.message);
@@ -41,7 +41,7 @@ export const googleAuth = async (req, res) => {
         const user = req.user; // Comes from Passport `done()`
         const { token, refreshToken, isNewUser } = req.authInfo; // Comes from Passport `done()`
 
-        const sanitizedUser = _.omit(user.toObject(), ['password', 'refreshToken']);
+        // const sanitizedUser = _.omit(user.toObject(), ['password', 'refreshToken']);
 
         if (isNewUser)
             sendMail(WELCOME(user.email, user.firstname))
@@ -53,7 +53,7 @@ export const googleAuth = async (req, res) => {
         //     message: "Login Successful via Google",
         //     data: sanitizedUser,
         // });
-        res.redirect(`${process.env.ALLOWED_ORIGIN}?googleLogin=success`);
+        res.redirect(`${process.env.ALLOWED_ORIGIN}?login=success&googleSignup=${isNewUser}`);
     } catch (error) {
         console.log(error);
         res.status(500).json({
