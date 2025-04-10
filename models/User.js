@@ -8,13 +8,13 @@ const userSchema = new Schema({
     lastname: { type: String, required: true },
     gender: { type: String, enum: ['Male', 'Female', 'Other'] },
     dob: { type: Date },
-    email: { 
-        type: String, 
-        required: [true, 'Email is required'], 
+    email: {
+        type: String,
+        required: [true, 'Email is required'],
         unique: [true, 'Email already exists'],
     },
-    password: { 
-        type: String, 
+    password: {
+        type: String,
         minlength: [8, 'Password must be at least 8 characters long']
     },
     username: { type: String, unique: [true, "Username already exists"] },
@@ -38,7 +38,11 @@ const userSchema = new Schema({
         enum: ['admin', 'user', 'owner'],
         default: 'user'
     },
-    refreshToken: { type: String, select: false } 
+    stripeSubscriptionId: {
+        type: String,
+        default: null, // Default to null if no subscription is found yet
+    },
+    refreshToken: { type: String, select: false }
 }, { timestamps: true });
 
 
