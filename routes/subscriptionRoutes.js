@@ -38,7 +38,7 @@ router.post('/checkout', authMiddleware, async (req, res) => {
             customer_email: email,  // Optionally pre-fill the email field for the user
             success_url: `${process.env.ALLOWED_ORIGIN}/success?session_id={CHECKOUT_SESSION_ID}`,  // Redirect on success
             cancel_url: `${process.env.ALLOWED_ORIGIN}/cancel`,  // Redirect on cancel
-            proration_behavior: 'create_prorations',
+            // proration_behavior: 'create_prorations',
             metadata: {
                 userId: userId,  // Store the userId in the metadata
             },
