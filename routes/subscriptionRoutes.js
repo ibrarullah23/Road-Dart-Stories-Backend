@@ -15,9 +15,9 @@ router.post('/checkout', authMiddleware, async (req, res) => {
     // Set up the priceId for the selected plan
 
     const priceMap = {
-        basic: 'price_1RBudDFPgpuDm99R5rM1lpr4',
-        business: 'price_1RBwT4FPgpuDm99RZjTprAFm',
-        enterprise: 'price_1RByfSFPgpuDm99R5huv7iXe',
+        basic: process.env.BASIC_PLAN_PRICE_ID,
+        business: process.env.BUSINESS_PLAN_PRICE_ID,
+        enterprise: process.env.ENTERPRISE_PLAN_PRICE_ID,
     };
     const priceId = priceMap[plan];
     if (!priceId) {
@@ -39,6 +39,7 @@ router.post('/checkout', authMiddleware, async (req, res) => {
             success_url: `${process.env.ALLOWED_ORIGIN}/success?session_id={CHECKOUT_SESSION_ID}`,  // Redirect on success
             cancel_url: `${process.env.ALLOWED_ORIGIN}/cancel`,  // Redirect on cancel
             // proration_behavior: 'create_prorations',
+            allow_promotion_codes: true,
             metadata: {
                 userId: userId,  // Store the userId in the metadata
             },
