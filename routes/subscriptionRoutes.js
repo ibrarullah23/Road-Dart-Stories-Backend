@@ -78,7 +78,7 @@ router.get('/', authMiddleware, async (req, res) => {
             plan: currentPlan,
             currentPeriodEnd,
             cancelAtPeriodEnd,
-            status: subscription.status,
+            status: subscription.status, // valuses will be active, past_due, canceled, incomplete, unpaid
         });
 
     } catch (error) {
@@ -92,6 +92,16 @@ router.get('/', authMiddleware, async (req, res) => {
         }
     }
 });
+
+router.get('/checkout/:sessionId', async (req, res) => {
+    const { sessionId } = req.params;
+    try {
+      const session = await stripe.checkout.sessions.retrieve(sessionId);
+      res.json(session);
+    } catch (error) {
+      res.status(500).json({ error: 'Error fetching session details from Stripe' });
+    }
+  });
 
 
 router.post('/webhook', bodyParser.raw({ type: 'application/json' }), async (req, res) => {
