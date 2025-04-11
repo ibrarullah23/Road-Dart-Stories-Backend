@@ -20,7 +20,7 @@ const userSubscriptionSchema = new Schema(
     },
     stripePriceId: {
       type: String,
-      required: true, // The price ID from Stripe
+      required: true, 
     },
     plan: {
       type: String,

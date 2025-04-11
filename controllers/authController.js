@@ -5,6 +5,7 @@ import { cookieOptions } from '../constants/cookieOptions.js';
 import _ from 'lodash';
 import sendMail from '../config/mail.js';
 import { WELCOME } from '../constants/emailTemplets.js';
+import Stripe from 'stripe';
 
 
 
@@ -32,7 +33,7 @@ export const signup = async (req, res) => {
                 message: error.message,
             }
         });
-    } 
+    }
 };
 
 export const googleAuth = async (req, res) => {
@@ -71,7 +72,28 @@ export const getMe = async (req, res) => {
         if (!user) {
             return res.status(404).json({ message: "User not found" });
         }
-        res.status(200).json({ data: user });
+
+        let subscription;
+
+        if (user.stripeSubscriptionId) {
+
+
+            // 2. Fetch subscription from Stripe
+            const subscription = await Stripe.subscriptions.retrieve(user.stripeSubscriptionId);
+
+            // 3. Parse and return the details
+            const currentPlan = subscription.items.data[0].price.nickname || subscription.items.data[0].price.id;
+            const currentPeriodEnd = new Date(subscription.current_period_end * 1000); // UNIX timestamp → Date
+            const cancelAtPeriodEnd = !subscription.cancel_at_period_end;
+
+            subscription = {
+                plan: currentPlan,
+                currentPeriodEnd,
+                status: subscription.status,
+            }
+        }
+
+        res.status(200).json({ data: { user, subscription } });
     } catch (err) {
         console.error(err);
         res.status(500).json({

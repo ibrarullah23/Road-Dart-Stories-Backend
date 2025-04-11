@@ -14,17 +14,39 @@ router.post('/checkout', authMiddleware, async (req, res) => {
 
     // Set up the priceId for the selected plan
 
-    const priceMap = {
-        basic: process.env.BASIC_PLAN_PRICE_ID,
-        business: process.env.BUSINESS_PLAN_PRICE_ID,
-        enterprise: process.env.ENTERPRISE_PLAN_PRICE_ID,
-    };
-    const priceId = priceMap[plan];
-    if (!priceId) {
-        return res.status(400).json({ error: 'Invalid plan selected' });
-    }
+    // const priceMap = {
+    //     basic: process.env.BASIC_PLAN_PRICE_ID,
+    //     business: process.env.BUSINESS_PLAN_PRICE_ID,
+    //     enterprise: process.env.ENTERPRISE_PLAN_PRICE_ID,
+    // };
+    // const priceId = priceMap[plan];
+    // if (!priceId) {
+    //     return res.status(400).json({ error: 'Invalid plan selected' });
+    // }
 
     try {
+        // Fetch the Product based on the Plan Name
+        const product = await stripe.products.list({ limit: 10 });
+        const productData = product.data.find(p => p.name.toLowerCase() === plan.toLowerCase());
+
+        if (!productData) {
+            return res.status(400).json({ error: 'Plan not found' });
+        }
+
+        // Fetch the Price for this Product
+        const prices = await stripe.prices.list({
+            product: productData.id,
+            active: true,  // Only active prices
+            limit: 1,      // Get the first active price
+        });
+
+        if (prices.data.length === 0) {
+            return res.status(400).json({ error: 'No active price found for the selected plan' });
+        }
+
+        const priceId = prices.data[0].id;
+
+
         // Create a Checkout session with Stripe
         const session = await stripe.checkout.sessions.create({
             payment_method_types: ['card'],  // Specify allowed payment methods

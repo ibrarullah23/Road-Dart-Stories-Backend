@@ -40,11 +40,11 @@ const userSchema = new Schema({
     },
     stripeSubscriptionId: {
         type: String,
-        default: null, // Default to null if no subscription is found yet
     },
     refreshToken: { type: String, select: false }
 }, { timestamps: true });
 
+// default: null, // Default to null if no subscription is found yet
 
 userSchema.pre('save', async function (next) {
     try {
