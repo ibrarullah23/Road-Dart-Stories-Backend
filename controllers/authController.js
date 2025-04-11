@@ -21,9 +21,22 @@ export const signup = async (req, res) => {
 
         // Create User (password hashing handled in model pre-save)
         const user = new User({ firstname, lastname, email, password, username });
+        // await user.save();
+
+
+        
+        // Generate JWT tokens
+        const token = generateAccessToken(user);
+        const refreshToken = generateRefreshToken(user);
+
+        // Save refreshToken in the user document
+        user.refreshToken = refreshToken;
         await user.save();
 
-        res.status(201).json({ message: "User registered successfully" });
+        res
+            .cookie('token', token, cookieOptions)
+            .cookie('refreshToken', refreshToken, cookieOptions)
+            .status(201).json({ message: "User registered successfully" });
 
         sendMail(WELCOME(req.body.email, req.body.firstname))
     } catch (error) {
