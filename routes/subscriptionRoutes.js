@@ -9,8 +9,9 @@ const router = express.Router();
 
 
 router.post('/checkout', authMiddleware, async (req, res) => {
-    const { plan, email } = req.body;  // Get the selected plan and email from the frontend
+    const { plan } = req.body;  // Get the selected plan and email from the frontend
     const userId = req.user.id;
+    const email = req.user.email;
 
     // Set up the priceId for the selected plan
 
