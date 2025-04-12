@@ -8,73 +8,158 @@ const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 const router = express.Router();
 
 
-router.post('/checkout', authMiddleware, async (req, res) => {
-    const { plan } = req.body;  // Get the selected plan and email from the frontend
-    const userId = req.user.id;
-    const email = req.user.email;
-
-    // Set up the priceId for the selected plan
-
-    // const priceMap = {
-    //     basic: process.env.BASIC_PLAN_PRICE_ID,
-    //     business: process.env.BUSINESS_PLAN_PRICE_ID,
-    //     enterprise: process.env.ENTERPRISE_PLAN_PRICE_ID,
-    // };
-    // const priceId = priceMap[plan];
-    // if (!priceId) {
-    //     return res.status(400).json({ error: 'Invalid plan selected' });
-    // }
-
+router.get('/plans', async (req, res) => {
     try {
-        // Fetch the Product based on the Plan Name
-        const product = await stripe.products.list({ limit: 10 });
-        const productData = product.data.find(p => p.name.toLowerCase() === plan.toLowerCase());
+        const products = await stripe.products.list({ active: true });
+        const prices = await stripe.prices.list({ active: true });
 
-        if (!productData) {
-            return res.status(400).json({ error: 'Plan not found' });
-        }
-
-        // Fetch the Price for this Product
-        const prices = await stripe.prices.list({
-            product: productData.id,
-            active: true,  // Only active prices
-            limit: 1,      // Get the first active price
+        // Combine product and price data
+        const plans = products.data.map(product => {
+            const priceObj = prices.data.find(price => price.product === product.id);
+            return {
+                id: product.id,
+                name: product.name,
+                price: priceObj?.unit_amount || 0,
+                priceId: priceObj?.id || null,
+                currency: priceObj?.currency || 'usd'
+            };
         });
 
-        if (prices.data.length === 0) {
-            return res.status(400).json({ error: 'No active price found for the selected plan' });
+        res.json(plans);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+
+router.post('/apply-promo', async (req, res) => {
+    const { promoCode, priceId } = req.body;
+
+    try {
+        const price = await stripe.prices.retrieve(priceId);
+        if (!price) return res.status(404).json({ success: false, error: 'Price not found' });
+
+        const promo = await stripe.promotionCodes.list({ code: promoCode, active: true });
+        if (promo.data.length > 0) {
+            const discount = promo.data[0].coupon.percent_off;
+            const newAmount = Math.round(price.unit_amount * (1 - discount / 100));
+            return res.json({ success: true, newAmount });
+        }
+        return res.json({ success: false });
+    } catch (err) {
+        return res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+
+// Create PaymentIntent and return client secret
+router.post('/create-payment-intent', async (req, res) => {
+    const { priceId, promoCode } = req.body;
+
+    try {
+        const price = await stripe.prices.retrieve(priceId);
+        if (!price) return res.status(400).json({ error: 'Invalid price' });
+
+        let finalAmount = price.unit_amount;
+
+        if (promoCode) {
+            const promo = await stripe.promotionCodes.list({ code: promoCode, active: true });
+            if (promo.data.length > 0) {
+                const discount = promo.data[0].coupon.percent_off;
+                finalAmount = Math.round(price.unit_amount * (1 - discount / 100));
+            }
         }
 
-        const priceId = prices.data[0].id;
+        const paymentIntent = await stripe.paymentIntents.create({
+            amount: finalAmount,
+            currency: price.currency,
+            automatic_payment_methods: { enabled: true },
+        });
+
+        res.json({ clientSecret: paymentIntent.client_secret });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
 
 
-        // Create a Checkout session with Stripe
+
+
+
+
+
+
+
+
+router.post('/checkout', authMiddleware, async (req, res) => {
+    const { priceId } = req.body;
+    const userId = req.user.id;  // Assuming userId comes from authenticated request
+    const email = req.user.email;  // Optional, you can use email in the metadata or for other purposes
+
+    if (!priceId) {
+        return res.status(400).json({ error: 'Missing priceId in request body' });
+    }
+
+    try {
+        // 1. Check if the customer exists using userId metadata
+        const customers = await stripe.customers.list({
+            metadata: { userId },  // Search by userId metadata
+        });
+
+        let customer = customers.data.length ? customers.data[0] : null;
+
+        if (!customer) {
+            // If no customer exists, create a new one
+            customer = await stripe.customers.create({
+                email,  // Optional: you can skip or store email as metadata if needed
+                metadata: { userId },  // Attach userId as metadata for future reference
+            });
+        }
+
+        // 2. Create a PaymentIntent or Checkout Session with the selected plan
         const session = await stripe.checkout.sessions.create({
-            payment_method_types: ['card'],  // Specify allowed payment methods
+            ui_mode: 'custom',
+            mode: 'subscription',  // Payment mode as subscription
+            customer: customer.id, // Associate customer with userId
             line_items: [
                 {
-                    price: priceId,  // Price ID for the selected plan
-                    quantity: 1,  // Only one unit of the plan selected
+                    price: priceId,
+                    quantity: 1,
                 },
             ],
-            mode: 'subscription',  // Use 'subscription' mode for recurring payments
-            customer_email: email,  // Optionally pre-fill the email field for the user
-            success_url: `${process.env.ALLOWED_ORIGIN}/success?session_id={CHECKOUT_SESSION_ID}`,  // Redirect on success
-            cancel_url: `${process.env.ALLOWED_ORIGIN}/cancel`,  // Redirect on cancel
-            // proration_behavior: 'create_prorations',
             allow_promotion_codes: true,
+            return_url: `${process.env.ALLOWED_ORIGIN}/return?session_id={CHECKOUT_SESSION_ID}`,
             metadata: {
-                userId: userId,  // Store the userId in the metadata
+                userId,  // Store userId in metadata for future reference
             },
         });
 
-        // Send back the session ID to the frontend for Stripe Checkout redirection
-        res.json({ id: session.id });
+        // 3. Return client secret for the frontend to complete the payment process
+        res.json({ clientSecret: session.client_secret });
     } catch (error) {
-        console.error('Error creating checkout session:', error);
+        console.error('Error creating custom checkout session:', error);
         res.status(500).send(error.message);
     }
 });
+
+
+
+// Fetch session status after payment
+app.get("/session-status", async (req, res) => {
+    const sessionId = req.query.session_id;
+    try {
+        const session = await stripe.checkout.sessions.retrieve(sessionId);
+        res.send({
+            status: session.status,
+            customer_email: session.customer_details?.email,
+        });
+    } catch (err) {
+        res.status(400).json({ error: "Invalid session ID" });
+    }
+});
+
+
+
 
 
 // Assuming you're using Express and have the stripe instance set up
@@ -120,12 +205,12 @@ router.get('/', authMiddleware, async (req, res) => {
 router.get('/checkout/:sessionId', async (req, res) => {
     const { sessionId } = req.params;
     try {
-      const session = await stripe.checkout.sessions.retrieve(sessionId);
-      res.json(session);
+        const session = await stripe.checkout.sessions.retrieve(sessionId);
+        res.json(session);
     } catch (error) {
-      res.status(500).json({ error: 'Error fetching session details from Stripe' });
+        res.status(500).json({ error: 'Error fetching session details from Stripe' });
     }
-  });
+});
 
 
 router.post('/webhook', bodyParser.raw({ type: 'application/json' }), async (req, res) => {
