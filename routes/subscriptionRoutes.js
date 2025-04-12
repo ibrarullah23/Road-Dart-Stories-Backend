@@ -19,6 +19,8 @@ router.get('/plans', async (req, res) => {
             return {
                 id: product.id,
                 name: product.name,
+                description: product.description || '', // Fetch marketing description
+                features: product.metadata.features ? product.metadata.features.split(',') : [], // Fetch marketing features from metadata
                 price: priceObj?.unit_amount || 0,
                 priceId: priceObj?.id || null,
                 currency: priceObj?.currency || 'usd'
@@ -43,7 +45,12 @@ router.post('/apply-promo', async (req, res) => {
         if (promo.data.length > 0) {
             const discount = promo.data[0].coupon.percent_off;
             const newAmount = Math.round(price.unit_amount * (1 - discount / 100));
-            return res.json({ success: true, newAmount });
+            return res.json({ 
+                success: true, 
+                newAmount, 
+                discount, 
+                originalAmount: price.unit_amount 
+            });
         }
         return res.json({ success: false });
     } catch (err) {
@@ -103,7 +110,7 @@ router.post('/checkout', authMiddleware, async (req, res) => {
     try {
         // 1. Check if the customer exists using userId metadata
         const customers = await stripe.customers.list({
-            metadata: { userId },  // Search by userId metadata
+            email,  // Use email to search for an existing customer
         });
 
         let customer = customers.data.length ? customers.data[0] : null;
@@ -118,7 +125,7 @@ router.post('/checkout', authMiddleware, async (req, res) => {
 
         // 2. Create a PaymentIntent or Checkout Session with the selected plan
         const session = await stripe.checkout.sessions.create({
-            ui_mode: 'custom',
+            ui_mode: 'embedded',
             mode: 'subscription',  // Payment mode as subscription
             customer: customer.id, // Associate customer with userId
             line_items: [
@@ -128,14 +135,17 @@ router.post('/checkout', authMiddleware, async (req, res) => {
                 },
             ],
             allow_promotion_codes: true,
+
             return_url: `${process.env.ALLOWED_ORIGIN}/return?session_id={CHECKOUT_SESSION_ID}`,
             metadata: {
                 userId,  // Store userId in metadata for future reference
             },
         });
 
-        // 3. Return client secret for the frontend to complete the payment process
-        res.json({ clientSecret: session.client_secret });
+
+        res.json({
+            clientSecret: session.client_secret,
+        });
     } catch (error) {
         console.error('Error creating custom checkout session:', error);
         res.status(500).send(error.message);
@@ -145,7 +155,7 @@ router.post('/checkout', authMiddleware, async (req, res) => {
 
 
 // Fetch session status after payment
-app.get("/session-status", async (req, res) => {
+router.get("/session_status", async (req, res) => {
     const sessionId = req.query.session_id;
     try {
         const session = await stripe.checkout.sessions.retrieve(sessionId);
@@ -213,7 +223,7 @@ router.get('/checkout/:sessionId', async (req, res) => {
 });
 
 
-router.post('/webhook', bodyParser.raw({ type: 'application/json' }), async (req, res) => {
+router.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
     const sig = req.headers['stripe-signature'];
     const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
