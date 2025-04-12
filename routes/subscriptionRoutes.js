@@ -1,6 +1,5 @@
 import express from 'express';
 import Stripe from 'stripe';
-import bodyParser from 'body-parser';
 import User from '../models/User.js';
 import { authMiddleware } from '../middlewares/authMiddleware.js';
 
