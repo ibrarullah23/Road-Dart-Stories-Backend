@@ -19,12 +19,13 @@ router.get('/plans', async (req, res) => {
                 id: product.id,
                 name: product.name,
                 description: product.description || '', // Fetch marketing description
-                features: product.metadata.features ? product.metadata.features.split(',') : [], // Fetch marketing features from metadata
+                features: product.marketing_features, // Fetch marketing features from metadata
                 price: priceObj?.unit_amount || 0,
                 priceId: priceObj?.id || null,
-                currency: priceObj?.currency || 'usd'
+                currency: priceObj?.currency || 'usd',
             };
         });
+
 
         res.json(plans);
     } catch (err) {
