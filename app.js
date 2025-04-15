@@ -19,6 +19,7 @@ dotenv.config();
 const app = express();
 
 // ===== MIDDLEWARES =====
+// app.use('/api/subscription/webhook', express.raw({ type: 'application/json' }));
 app.use(cookieParser());
 app.use(express.json()); // Parse JSON bodies
 app.use(express.urlencoded({ extended: true }));

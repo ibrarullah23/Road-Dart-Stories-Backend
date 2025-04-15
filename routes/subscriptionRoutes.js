@@ -3,6 +3,8 @@ import Stripe from 'stripe';
 import User from '../models/User.js';
 import { authMiddleware } from '../middlewares/authMiddleware.js';
 
+import bodyParser from 'body-parser';
+
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 const router = express.Router();
 
@@ -223,7 +225,7 @@ router.get('/checkout/:sessionId', async (req, res) => {
 });
 
 
-router.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
+router.post('/webhook', bodyParser.raw({ type: 'application/json' }), async (req, res) => {
     const sig = req.headers['stripe-signature'];
     const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
 

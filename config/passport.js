@@ -28,6 +28,7 @@ passport.use(
                         lastname,
                         email: profile.emails[0].value,
                         refreshToken: "",
+                        status: "verified",
                     });
                 }
 
