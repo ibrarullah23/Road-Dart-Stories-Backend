@@ -11,6 +11,8 @@ import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import passport from 'passport';
 import "./config/passport.js";
+import { stripeWebhookFn } from './config/stripe.js';
+import bodyParser from 'body-parser';
 
 dotenv.config();
 
@@ -18,8 +20,11 @@ dotenv.config();
 // express setup
 const app = express();
 
+
+app.post('/webhook', bodyParser.raw({ type: 'application/json' }), stripeWebhookFn );
+
+
 // ===== MIDDLEWARES =====
-// app.use('/api/subscription/webhook', express.raw({ type: 'application/json' }));
 app.use(cookieParser());
 app.use(express.json()); // Parse JSON bodies
 app.use(express.urlencoded({ extended: true }));
