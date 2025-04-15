@@ -81,7 +81,7 @@ export const googleAuth = async (req, res) => {
 
 export const getMe = async (req, res) => {
     try {
-        const user = await User.findById(req.user.id).select('-password');
+        const user = await User.findById(req.user.id).select('-password -__v');
         if (!user) {
             return res.status(404).json({ message: "User not found" });
         }
@@ -97,19 +97,21 @@ export const getMe = async (req, res) => {
 
             // 3. Parse and return the details
             const currentPlan = subscription.items.data[0].price.nickname || subscription.items.data[0].price.id;
-            
+
             const productId = subscription.items.data[0].price.product;
             const product = await stripe.products.retrieve(productId);  // Fetch the product details
 
             const plan = product.name;
-            
-            const currentPeriodEnd = subscription.current_period_end ?
-                new Date(subscription.current_period_end * 1000) : null;// UNIX timestamp → Date
-            const cancelAtPeriodEnd = !subscription.cancel_at_period_end;
+
+
+            const billingCycleAnchor = subscription.billing_cycle_anchor; // UNIX timestamp in seconds
+
+            const currentPeriodEnd = billingCycleAnchor + 30 * 24 * 60 * 60;
 
             subscriptionData = {
                 plan,
                 currentPeriodEnd,
+                isAutoRenew: !subscription.cancel_at_period_end,
                 status: subscription.status,
             }
         }
