@@ -4,10 +4,10 @@ import { generateAccessToken, generateRefreshToken } from '../utils/helper.js';
 import { cookieOptions } from '../constants/cookieOptions.js';
 import _ from 'lodash';
 import sendMail from '../config/mail.js';
-import { WELCOME } from '../constants/emailTemplets.js';
+import { OTP, WELCOME } from '../constants/emailTemplets.js';
 import Stripe from 'stripe';
 
-
+const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 
 export const signup = async (req, res) => {
     try {
@@ -24,7 +24,7 @@ export const signup = async (req, res) => {
         // await user.save();
 
 
-        
+
         // Generate JWT tokens
         const token = generateAccessToken(user);
         const refreshToken = generateRefreshToken(user);
@@ -38,7 +38,7 @@ export const signup = async (req, res) => {
             .cookie('refreshToken', refreshToken, cookieOptions)
             .status(201).json({ message: "User registered successfully" });
 
-        sendMail(WELCOME(req.body.email, req.body.firstname))
+        sendMail(OTP(req.body.email, req.body.firstname))
     } catch (error) {
         console.log(error.message);
         res.status(500).json({
@@ -86,27 +86,35 @@ export const getMe = async (req, res) => {
             return res.status(404).json({ message: "User not found" });
         }
 
-        let subscription;
+        let subscriptionData;
+
 
         if (user.stripeSubscriptionId) {
 
 
             // 2. Fetch subscription from Stripe
-            const subscription = await Stripe.subscriptions.retrieve(user.stripeSubscriptionId);
+            const subscription = await stripe.subscriptions.retrieve(user.stripeSubscriptionId);
 
             // 3. Parse and return the details
             const currentPlan = subscription.items.data[0].price.nickname || subscription.items.data[0].price.id;
-            const currentPeriodEnd = new Date(subscription.current_period_end * 1000); // UNIX timestamp → Date
+            
+            const productId = subscription.items.data[0].price.product;
+            const product = await stripe.products.retrieve(productId);  // Fetch the product details
+
+            const plan = product.name;
+            
+            const currentPeriodEnd = subscription.current_period_end ?
+                new Date(subscription.current_period_end * 1000) : null;// UNIX timestamp → Date
             const cancelAtPeriodEnd = !subscription.cancel_at_period_end;
 
-            subscription = {
-                plan: currentPlan,
+            subscriptionData = {
+                plan,
                 currentPeriodEnd,
                 status: subscription.status,
             }
         }
 
-        res.status(200).json({ data: { user, subscription } });
+        res.status(200).json({ data: { user, subscription: subscriptionData } });
     } catch (err) {
         console.error(err);
         res.status(500).json({

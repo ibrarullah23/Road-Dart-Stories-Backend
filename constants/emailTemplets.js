@@ -24,7 +24,7 @@ export const WELCOME = (email, firstname) => {
 };
 
 
-export const OTP = (email, firstname, otp) => {
+export const OTP = (email, firstname, token) => {
     const data = {
         subject: "OTP for Verification - Road Dart Stories",
         recipient: email,
@@ -32,7 +32,7 @@ export const OTP = (email, firstname, otp) => {
             <h1>Your OTP for Verification</h1>
             <p>Dear ${firstname},</p>
             <p>Thank you for signing up with Road Dart Stories. To complete your verification, please click the link below:</p>
-            <a href="${process.env.ALLOWED_ORIGIN}/verify?otp=${otp}" class="button">Verify Account</a>
+            <a href="${process.env.BACKEND_URL}/verify?token=${token}" class="button">Verify Account</a>
             <p>If you did not request this, please ignore this email or contact our support team for assistance.</p>
             <p>Best regards,</p>
             <p>The Road Darts Team</p>
