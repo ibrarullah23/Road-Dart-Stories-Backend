@@ -2,6 +2,7 @@ import businessRoutes from './routes/businessRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import contactRoutes from './routes/contactRoutes.js';
+import reviewRoutes from './routes/reviewRoutes.js';
 import subscriptionRoutes from './routes/subscriptionRoutes.js';
 
 import express from 'express';
@@ -61,7 +62,8 @@ app.use('/api/businesses', businessRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/contactus', contactRoutes);
-app.use('/api/subscription', subscriptionRoutes); // Subscription routes
+app.use('/api/subscription', subscriptionRoutes); 
+app.use('/api/reviews', reviewRoutes); 
 
 
 // =========================== Routes ===========================

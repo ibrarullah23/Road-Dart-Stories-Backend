@@ -28,7 +28,45 @@ export const getAllBusinesses = async (req, res) => {
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
 
-    const businesses = await Business.find().skip(skip).limit(limit);
+    // const businesses = await Business.find().skip(skip).limit(limit);
+
+
+    // Get businesses with average rating and total ratings using aggregation
+    const businesses = await Business.aggregate([
+      { $skip: skip },
+      { $limit: limit },
+      {
+        $lookup: {
+          from: 'reviews', // Collection name for reviews (assumed to be 'reviews')
+          localField: '_id',
+          foreignField: 'businessId',
+          as: 'reviews'
+        }
+      },
+      {
+        $addFields: {
+          totalRatings: { $size: '$reviews' },
+          averageRating: {
+            $cond: {
+              if: { $gt: [{ $size: '$reviews' }, 0] },
+              then: { $avg: '$reviews.rating' },
+              else: 0
+            }
+          }
+        }
+      },
+      {
+        $project: {
+          reviews: 0 // Remove the reviews array from the result
+        }
+      }
+    ]);
+
+
+
+
+
+
     const totalItems = await Business.countDocuments();
     const totalPages = Math.ceil(totalItems / limit);
 
@@ -48,7 +86,21 @@ export const getAllBusinesses = async (req, res) => {
 export const getBusinessById = async (req, res) => {
   try {
     const business = await Business.findById(req.params.id);
+
+
     if (!business) return res.status(404).json({ message: 'Business not found' });
+
+    // average rating and total ratings using aggregation
+    const reviewsAggregation = await Review.aggregate([
+      { $match: { businessId: business._id } },
+      { $group: { _id: null, avgRating: { $avg: '$rating' }, totalRatings: { $sum: 1 } } }
+    ]);
+
+    const averageRating = reviewsAggregation.length > 0 ? reviewsAggregation[0].avgRating : 0;
+    const totalRatings = reviewsAggregation.length > 0 ? reviewsAggregation[0].totalRatings : 0;
+
+    business.averageRating = averageRating.toFixed(1);
+    business.totalRatings = totalRatings;
     res.status(200).json(business);
   } catch (err) {
     res.status(500).json({ message: err.message });

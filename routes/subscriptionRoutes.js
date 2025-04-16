@@ -94,13 +94,6 @@ router.post('/create-payment-intent', async (req, res) => {
 
 
 
-
-
-
-
-
-
-
 router.post('/checkout', authMiddleware, async (req, res) => {
     const { priceId } = req.body;
     const userId = req.user.id;  // Assuming userId comes from authenticated request
