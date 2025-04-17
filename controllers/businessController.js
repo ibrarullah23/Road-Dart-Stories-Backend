@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import Business from '../models/Business.js';
 
 // Create new business
@@ -85,24 +86,55 @@ export const getAllBusinesses = async (req, res) => {
 // Get business by ID
 export const getBusinessById = async (req, res) => {
   try {
-    const business = await Business.findById(req.params.id);
+    // const business = await Business.findById(req.params.id);
 
 
-    if (!business) return res.status(404).json({ message: 'Business not found' });
+    // if (!business) return res.status(404).json({ message: 'Business not found' });
 
-    // average rating and total ratings using aggregation
-    const reviewsAggregation = await Review.aggregate([
-      { $match: { businessId: business._id } },
-      { $group: { _id: null, avgRating: { $avg: '$rating' }, totalRatings: { $sum: 1 } } }
+    // // average rating and total ratings using aggregation
+    // const reviewsAggregation = await Review.aggregate([
+    //   { $match: { businessId: business._id } },
+    //   { $group: { _id: null, avgRating: { $avg: '$rating' }, totalRatings: { $sum: 1 } } }
+    // ]);
+
+    // const averageRating = reviewsAggregation.length > 0 ? reviewsAggregation[0].avgRating : 0;
+    // const totalRatings = reviewsAggregation.length > 0 ? reviewsAggregation[0].totalRatings : 0;
+
+    // business.averageRating = averageRating.toFixed(1);
+    // business.totalRatings = totalRatings;
+    // res.status(200).json(business);
+
+
+    const businessData = await Business.aggregate([
+      { $match: { _id: new mongoose.Types.ObjectId(req.params.id) } }, // Match the business
+      {
+        $lookup: {
+          from: 'reviews', // collection name in db (MUST BE plural and lowercase usually)
+          localField: '_id',
+          foreignField: 'businessId',
+          as: 'reviews'
+        }
+      },
+      {
+        $addFields: {
+          averageRating: { $ifNull: [{ $avg: "$reviews.rating" }, 0] },
+          totalRatings: { $size: "$reviews" }
+        }
+      },
+      {
+        $project: {
+          reviews: 0 // don't send reviews array unless you want
+        }
+      }
     ]);
 
-    const averageRating = reviewsAggregation.length > 0 ? reviewsAggregation[0].avgRating : 0;
-    const totalRatings = reviewsAggregation.length > 0 ? reviewsAggregation[0].totalRatings : 0;
+    if (!businessData.length) {
+      return res.status(404).json({ message: 'Business not found' });
+    }
 
-    business.averageRating = averageRating.toFixed(1);
-    business.totalRatings = totalRatings;
-    res.status(200).json(business);
+    res.status(200).json(businessData[0]); // Send the first (and only) business object
   } catch (err) {
+    console.log(err);
     res.status(500).json({ message: err.message });
   }
 };
