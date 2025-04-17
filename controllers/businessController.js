@@ -29,36 +29,93 @@ export const getAllBusinesses = async (req, res) => {
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
 
-    // const businesses = await Business.find().skip(skip).limit(limit);
+    const {
+      category,
+      priceCategory,
+      city,
+      state,
+      country,
+      bordtype,
+      agelimit,
+      rating,
+      search,
+      sort = 'createdAt_desc',
+    } = req.query;
 
 
-    // Get businesses with average rating and total ratings using aggregation
+    const matchStage = {};
+
+    // Filters
+    if (category) matchStage.category = category;
+    if (priceCategory) matchStage['price.category'] = priceCategory;
+    if (city) matchStage['location.city'] = city;
+    if (state) matchStage['location.state'] = state;
+    if (country) matchStage['location.country'] = country;
+    if (bordtype) matchStage.bordtype = bordtype;
+    if (agelimit) matchStage.agelimit = { $lte: parseInt(agelimit) };
+
+
+    // Add search
+    if (search) {
+      matchStage.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { tagline: { $regex: search, $options: 'i' } },
+        { shortDis: { $regex: search, $options: 'i' } },
+        { tags: { $regex: search, $options: 'i' } },
+      ];
+    }
+
+    // Sorting handling
+    const sortOptions = {
+      createdAt_desc: { createdAt: -1 },
+      createdAt_asc: { createdAt: 1 },
+      rating_desc: { averageRating: -1 },
+      rating_asc: { averageRating: 1 },
+    };
+    const selectedSort = sortOptions[sort] || { createdAt: -1 };
+
+
     const businesses = await Business.aggregate([
-      { $skip: skip },
-      { $limit: limit },
+      { $match: matchStage },
       {
         $lookup: {
-          from: 'reviews', // Collection name for reviews (assumed to be 'reviews')
+          from: 'reviews',
           localField: '_id',
           foreignField: 'businessId',
-          as: 'reviews'
+          as: 'reviews',
         }
       },
       {
         $addFields: {
           totalRatings: { $size: '$reviews' },
           averageRating: {
-            $cond: {
-              if: { $gt: [{ $size: '$reviews' }, 0] },
-              then: { $avg: '$reviews.rating' },
-              else: 0
-            }
+            $cond: [
+              { $gt: [{ $size: '$reviews' }, 0] },
+              { $avg: '$reviews.rating' },
+              0
+            ]
           }
         }
       },
       {
         $project: {
-          reviews: 0 // Remove the reviews array from the result
+          reviews: 0, // remove review docs
+        }
+      },
+      // Apply rating filter AFTER calculating averageRating
+      ...(rating ? [{ $match: { averageRating: { $gte: parseFloat(rating) } } }] : []),
+      {
+        $facet: {
+          // metadata: [{ $count: 'total' }],
+          data: [
+            { $sort: selectedSort },
+            { $skip: skip },
+            { $limit: limit }
+          ],
+          
+          // totalCount: [
+          //   { $count: 'count' },
+          // ],
         }
       }
     ]);
@@ -67,12 +124,48 @@ export const getAllBusinesses = async (req, res) => {
 
 
 
+    // Get businesses with average rating and total ratings using aggregation
+    // const businesses = await Business.aggregate([
+    //   { $skip: skip },
+    //   { $limit: limit },
+    //   {
+    //     $lookup: {
+    //       from: 'reviews', // Collection name for reviews (assumed to be 'reviews')
+    //       localField: '_id',
+    //       foreignField: 'businessId',
+    //       as: 'reviews'
+    //     }
+    //   },
+    //   {
+    //     $addFields: {
+    //       totalRatings: { $size: '$reviews' },
+    //       averageRating: {
+    //         $cond: {
+    //           if: { $gt: [{ $size: '$reviews' }, 0] },
+    //           then: { $avg: '$reviews.rating' },
+    //           else: 0
+    //         }
+    //       }
+    //     }
+    //   },
+    //   {
+    //     $project: {
+    //       reviews: 0 // Remove the reviews array from the result
+    //     }
+    //   }
+    // ]);
 
-    const totalItems = await Business.countDocuments();
+
+
+
+    const totalItems = await Business.countDocuments(matchStage);
+
+    // const totalItems = businesses[0].data.length; ;
     const totalPages = Math.ceil(totalItems / limit);
+    const data = businesses[0].data;
 
     res.status(200).json({
-      data: businesses,
+      data,
       totalItems,
       totalPages,
       page,
