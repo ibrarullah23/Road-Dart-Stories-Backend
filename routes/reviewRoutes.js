@@ -5,8 +5,8 @@ import { createReview, getAllReviews, deleteReview } from '../controllers/review
 const router = express.Router();
 
 router.post('/', authMiddleware , createReview);
-router.get('/', getAllReviews);
 router.get('/:businessId', getAllReviews);
+router.get('/', getAllReviews);
 router.delete('/:id',authMiddleware, deleteReview);
 
 export default router;

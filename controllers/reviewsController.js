@@ -27,7 +27,7 @@ export const getAllReviews = async (req, res, next) => {
         limit = parseInt(limit);
         const skip = (page - 1) * limit;
 
-        const filter = req.query.businessId ? { businessId: req.query.businessId } : {};
+        const filter = req.params.businessId ? { businessId: req.params.businessId } : {};
 
         const sortOption = sort === 'rating'
             ? { rating: -1, createdAt: -1 } // sort by rating, then newest first
