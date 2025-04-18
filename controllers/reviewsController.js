@@ -27,12 +27,14 @@ export const getAllReviews = async (req, res, next) => {
         limit = parseInt(limit);
         const skip = (page - 1) * limit;
 
+        const filter = req.query.businessId ? { businessId: req.query.businessId } : {};
+
         const sortOption = sort === 'rating'
             ? { rating: -1, createdAt: -1 } // sort by rating, then newest first
             : { createdAt: -1 };            // default sort: newest reviews first
 
-        const totalItems = await Review.countDocuments();
-        const reviews = await Review.find()
+        const totalItems = await Review.countDocuments(filter);
+        const reviews = await Review.find(filter)
             .populate('userId', 'username email')
             .populate('businessId', 'name')
             .sort(sortOption)
