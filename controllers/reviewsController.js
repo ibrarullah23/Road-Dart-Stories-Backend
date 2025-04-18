@@ -4,7 +4,8 @@ import Review from "../models/Review.js";
 // Create a new review
 export const createReview = async (req, res, next) => {
     try {
-        const { userId, businessId, rating, img, text } = req.body;
+        const { businessId, rating, img, text } = req.body;
+        const userId = req.user.id;
 
         const review = await Review.create({ userId, businessId, rating, img, text });
 
@@ -14,6 +15,7 @@ export const createReview = async (req, res, next) => {
             data: review
         });
     } catch (error) {
+        console.log(error);
         next(error);
     }
 };
