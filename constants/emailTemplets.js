@@ -32,6 +32,7 @@ export const OTP = (email, firstname, token) => {
             <h1>Your OTP for Verification</h1>
             <p>Dear ${firstname},</p>
             <p>Thank you for signing up with Road Dart Stories. To complete your verification, please click the link below:</p>
+            <p>This link will expire in 24 hours.</p>
             <a href="${process.env.BACKEND_URL}/verify?token=${token}" class="button">Verify Account</a>
             <p>If you did not request this, please ignore this email or contact our support team for assistance.</p>
             <p>Best regards,</p>

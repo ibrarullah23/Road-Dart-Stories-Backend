@@ -15,7 +15,6 @@ export const createReview = async (req, res, next) => {
             data: review
         });
     } catch (error) {
-        console.log(error);
         next(error);
     }
 };

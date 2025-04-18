@@ -27,6 +27,7 @@ export const signup = async (req, res) => {
 
         // Generate JWT tokens
         const token = generateAccessToken(user);
+        const tokenForOtp = generateAccessToken(user);
         const refreshToken = generateRefreshToken(user);
 
         // Save refreshToken in the user document
@@ -38,7 +39,7 @@ export const signup = async (req, res) => {
             .cookie('refreshToken', refreshToken, cookieOptions)
             .status(201).json({ message: "User registered successfully" });
 
-        sendMail(OTP(req.body.email, req.body.firstname))
+        sendMail(OTP(req.body.email, req.body.firstname, tokenForOtp))
     } catch (error) {
         console.log(error.message);
         res.status(500).json({
@@ -167,7 +168,20 @@ export const loginUser = async (req, res) => {
     }
 };
 
+export const verifyEmail = async (req, res) => {
+    try {
+        const { token } = req.query;
+        if (!token) return res.redirect('https://roaddartfrontend.vercel.app/?emailverification=failed');
 
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+        await User.findByIdAndUpdate(decoded.id, { isVerified: true });
+
+        res.redirect('https://roaddartfrontend.vercel.app/?emailverification=success');
+    } catch (error) {
+        res.redirect('https://roaddartfrontend.vercel.app/?emailverification=failed');
+    }
+};
 
 
 export const logout = async (req, res) => {
