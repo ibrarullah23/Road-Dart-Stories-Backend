@@ -14,6 +14,7 @@ import passport from 'passport';
 import "./config/passport.js";
 import { stripeWebhookFn } from './config/stripe.js';
 import bodyParser from 'body-parser';
+import { errorHandler } from './middlewares/errorHandler.js';
 
 dotenv.config();
 
@@ -72,6 +73,8 @@ app.use('/api/reviews', reviewRoutes);
 app.use((req, res, next) => {
     res.status(404).json({ message: "Route Not Found" });
 });
+
+app.use(errorHandler);
 
 app.listen(process.env.PORT, () => {
     console.log(`✅ Server is running on port ${process.env.PORT}`);
