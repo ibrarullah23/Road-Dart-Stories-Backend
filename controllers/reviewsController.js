@@ -15,6 +15,14 @@ export const createReview = async (req, res, next) => {
             data: review
         });
     } catch (error) {
+
+        if (error.code === 11000) {
+            return res.status(400).json({
+                success: false,
+                message: 'You have already reviewed this business.'
+            });
+        }
+
         next(error);
     }
 };
@@ -36,15 +44,27 @@ export const getAllReviews = async (req, res, next) => {
         const totalItems = await Review.countDocuments(filter);
         const reviews = await Review.find(filter)
             .populate('userId', 'username email')
-            .populate('businessId', 'name')
+            .populate('businessId', 'name totalRatings averageRating')
             .sort(sortOption)
             .skip(skip)
             .limit(limit);
+
+
+        // 🔥 Find the current user's submitted review if logged in
+        let submittedReview ;
+        if (req.user && req.user.id) {
+            submittedReview = await Review.findOne({
+                userId: req.user.id,
+                ...filter,
+            })
+            .select('rating text img createdAt')
+        }
 
         res.status(200).json({
             success: true,
             data: reviews,
             totalItems,
+            submittedReview,
             totalPages: Math.ceil(totalItems / limit),
             page,
             limit,
