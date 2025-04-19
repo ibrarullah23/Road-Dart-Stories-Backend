@@ -10,7 +10,10 @@ let transporter = null;
 const getTransporter = () => {
   if (!transporter) {
     transporter = nodemailer.createTransport({
-      service: "gmail",
+      // service: "gmail",
+      host: "smtp.gmail.com",
+      port: 587,
+      secure: false, // true for 465, false for other ports
       auth: {
         user: process.env.EMAIL_USERNAME,
         pass: process.env.EMAIL_PASSWORD,
@@ -132,8 +135,8 @@ const sendMail = async (data) => {
     const transporter = getTransporter();
 
 
-    await transporter.verify(); 
-        console.log("Server is ready to take our messages");
+    await transporter.verify();
+    console.log("Server is ready to take our messages");
 
     // transporter.verify((error, success) => {
     //   if (error) {
