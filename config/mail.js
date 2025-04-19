@@ -131,13 +131,16 @@ const sendMail = async (data) => {
 
     const transporter = getTransporter();
 
-    transporter.verify((error, success) => {
-      if (error) {
-        console.log("Error in mail.js", error.message);
-      } else {
+
+    await transporter.verify(); 
         console.log("Server is ready to take our messages");
-      }
-    });
+
+    // transporter.verify((error, success) => {
+    //   if (error) {
+    //     console.log("Error in mail.js", error.message);
+    //   } else {
+    //   }
+    // });
 
 
     const info = await transporter.sendMail(mailOptions);
