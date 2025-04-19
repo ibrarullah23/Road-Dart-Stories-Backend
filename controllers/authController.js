@@ -11,7 +11,7 @@ const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 
 export const signup = async (req, res) => {
     try {
-        const { firstname, lastname, email, password, username } = req.body;
+        const { firstname, lastname, email, password, username, profileImg } = req.body;
 
         // Check if email exists
         // const existingUser = await User.findOne({ email });
@@ -20,7 +20,7 @@ export const signup = async (req, res) => {
             return res.status(400).json({ message: "Password is required" });
 
         // Create User (password hashing handled in model pre-save)
-        const user = new User({ firstname, lastname, email, password, username });
+        const user = new User({ firstname, lastname, email: email.trim(), password, username, profileImg });
         // await user.save();
 
 
@@ -39,7 +39,7 @@ export const signup = async (req, res) => {
             .cookie('refreshToken', refreshToken, cookieOptions)
             .status(201).json({ message: "User registered successfully" });
 
-        sendMail(OTP(req.body.email, req.body.firstname, tokenForOtp))
+        sendMail(OTP(user.email, user.firstname, tokenForOtp))
     } catch (error) {
         console.log(error.message);
         res.status(500).json({

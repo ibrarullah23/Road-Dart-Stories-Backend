@@ -3,6 +3,16 @@ import bcrypt from "bcryptjs";
 
 const { Schema, model } = mongoose;
 
+function validateURL(v) {
+    if (!v) return true; // If no URL, skip validation (in case profile image is optional)
+    try {
+        new URL(v);
+        return true;
+    } catch (err) {
+        return false;
+    }
+}
+
 const userSchema = new Schema({
     firstname: { type: String, required: true },
     lastname: { type: String, required: true },
@@ -12,6 +22,11 @@ const userSchema = new Schema({
         type: String,
         required: [true, 'Email is required'],
         unique: [true, 'Email already exists'],
+        lowercase: true,
+        validate: {
+            validator: v => /^(?!.*\.\.)[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(v),
+            message: "Invalid Email"
+        }
     },
     password: {
         type: String,
@@ -25,6 +40,13 @@ const userSchema = new Schema({
         zipcode: String
     },
     socials: { type: Map, of: String },
+    profileImg: {
+        type: String,
+        validate: {
+            validator: validateURL,
+            message: 'Invalid URL format for profile image'
+        }
+    },
     status: {
         type: String,
         enum: {
@@ -44,7 +66,6 @@ const userSchema = new Schema({
     refreshToken: { type: String, select: false }
 }, { timestamps: true });
 
-// default: null, // Default to null if no subscription is found yet
 
 userSchema.pre('save', async function (next) {
     try {
@@ -84,12 +105,6 @@ userSchema.pre('save', async function (next) {
         next(err);
     }
 });
-
-
-/** Method to compare password */
-// userSchema.methods.comparePassword = async function (candidatePassword) {
-//     return bcrypt.compare(candidatePassword, this.pass);
-// };
 
 const User = model('User', userSchema);
 
