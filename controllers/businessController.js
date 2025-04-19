@@ -37,22 +37,33 @@ export const getAllBusinesses = async (req, res) => {
       country,
       bordtype,
       agelimit,
-      rating,
+      // rating,
       search,
       sort = 'createdAt_desc',
     } = req.query;
-
-
+    const ratingFilter = req.query.rating ? parseFloat(req.query.rating) : null;
+    const rating = isNaN(ratingFilter) ? null : ratingFilter;
     const matchStage = {};
 
-    // Filters
-    if (category) matchStage.category = category;
+
+    const buildRegex = (value) => ({ $regex: new RegExp(`^${value}$`, 'i') });
+
+    if (category) matchStage.category = buildRegex(category);
     if (priceCategory) matchStage['price.category'] = priceCategory;
-    if (city) matchStage['location.city'] = city;
-    if (state) matchStage['location.state'] = state;
-    if (country) matchStage['location.country'] = country;
-    if (bordtype) matchStage.bordtype = bordtype;
+    if (city) matchStage['location.city'] = buildRegex(city);
+    if (state) matchStage['location.state'] = buildRegex(state);
+    if (country) matchStage['location.country'] = buildRegex(country);
+    if (bordtype) matchStage.bordtype = buildRegex(bordtype);
     if (agelimit) matchStage.agelimit = { $lte: parseInt(agelimit) };
+
+    // // Filters
+    // if (category) matchStage.category = category;
+    // if (priceCategory) matchStage['price.category'] = priceCategory;
+    // if (city) matchStage['location.city'] = city;
+    // if (state) matchStage['location.state'] = state;
+    // if (country) matchStage['location.country'] = country;
+    // if (bordtype) matchStage.bordtype = bordtype;
+    // if (agelimit) matchStage.agelimit = { $lte: parseInt(agelimit) };
 
 
     // Add search
@@ -81,7 +92,7 @@ export const getAllBusinesses = async (req, res) => {
         $lookup: {
           from: 'reviews',
           localField: '_id',
-          foreignField: 'businessId',
+          foreignField: 'business',
           as: 'reviews',
         }
       },
@@ -112,55 +123,17 @@ export const getAllBusinesses = async (req, res) => {
             { $skip: skip },
             { $limit: limit }
           ],
-          
-          // totalCount: [
-          //   { $count: 'count' },
-          // ],
+
+          totalCount: [
+            { $count: 'count' },
+          ],
         }
       }
     ]);
 
 
 
-
-
-    // Get businesses with average rating and total ratings using aggregation
-    // const businesses = await Business.aggregate([
-    //   { $skip: skip },
-    //   { $limit: limit },
-    //   {
-    //     $lookup: {
-    //       from: 'reviews', // Collection name for reviews (assumed to be 'reviews')
-    //       localField: '_id',
-    //       foreignField: 'businessId',
-    //       as: 'reviews'
-    //     }
-    //   },
-    //   {
-    //     $addFields: {
-    //       totalRatings: { $size: '$reviews' },
-    //       averageRating: {
-    //         $cond: {
-    //           if: { $gt: [{ $size: '$reviews' }, 0] },
-    //           then: { $avg: '$reviews.rating' },
-    //           else: 0
-    //         }
-    //       }
-    //     }
-    //   },
-    //   {
-    //     $project: {
-    //       reviews: 0 // Remove the reviews array from the result
-    //     }
-    //   }
-    // ]);
-
-
-
-
-    const totalItems = await Business.countDocuments(matchStage);
-
-    // const totalItems = businesses[0].data.length; ;
+    const totalItems = businesses[0].totalCount[0]?.count || 0;
     const totalPages = Math.ceil(totalItems / limit);
     const data = businesses[0].data;
 

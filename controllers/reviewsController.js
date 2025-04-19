@@ -17,10 +17,13 @@ export const createReview = async (req, res, next) => {
         });
     } catch (error) {
 
+
         if (error.code === 11000) {
-            return res.status(400).json({
+            return res.status(409).json({
                 success: false,
-                message: 'You have already reviewed this business.'
+                error: {
+                    message: 'You have already submitted a review for this business',
+                }
             });
         }
 
@@ -43,13 +46,13 @@ export const getAllReviews = async (req, res, next) => {
             : { createdAt: -1 };            // default sort: newest reviews first
 
         // const totalReviews = await Review.countDocuments(filter);
-        
+
         const stats = await Review.aggregate([
-            { $match: { business: new mongoose.Types.ObjectId(req.params.business ) } },
+            { $match: { business: new mongoose.Types.ObjectId(req.params.business) } },
             { $group: { _id: null, totalReviews: { $sum: 1 }, averageRating: { $avg: "$rating" } } }
-          ]);
-      
-          const { totalReviews, averageRating } = stats.length > 0 ? stats[0] : { totalReviews: 0, averageRating: 0 };
+        ]);
+
+        const { totalReviews, averageRating } = stats.length > 0 ? stats[0] : { totalReviews: 0, averageRating: 0 };
 
 
 
@@ -62,13 +65,13 @@ export const getAllReviews = async (req, res, next) => {
 
 
         // 🔥 Find the current user's submitted review if logged in
-        let submittedReview ;
+        let submittedReview;
         if (req.user && req.user.id) {
             submittedReview = await Review.findOne({
                 user: req.user.id,
                 ...filter,
             })
-            .select('rating text img createdAt')
+                .select('rating text img createdAt')
         }
 
         res.status(200).json({
