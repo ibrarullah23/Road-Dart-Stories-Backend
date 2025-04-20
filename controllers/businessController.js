@@ -177,7 +177,7 @@ export const getBusinessById = async (req, res) => {
         $lookup: {
           from: 'reviews', // collection name in db (MUST BE plural and lowercase usually)
           localField: '_id',
-          foreignField: 'businessId',
+          foreignField: 'business',
           as: 'reviews'
         }
       },
