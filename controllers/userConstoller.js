@@ -112,21 +112,6 @@ export const updateUser = async (req, res) => {
         delete userObj.__v;
         delete userObj.refreshToken;
 
-        // const user = await User.findByIdAndUpdate(req.params.id, {
-        //     firstname,
-        //     lastname,
-        //     gender,
-        //     dob,
-        //     email,
-        //     password,
-        //     username,
-        //     address,
-        //     socials,
-        //     profileImg
-        // }, { new: true, runValidators: true }).select('-password -__v');
-        // if (!user) return res.status(404).json({ message: 'User not found' });
-
-
         res.status(200).json({ message: 'User updated successfully', data: userObj });
     } catch (err) {
         res.status(400).json({ message: err.message });
