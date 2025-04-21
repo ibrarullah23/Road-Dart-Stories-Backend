@@ -90,7 +90,6 @@ export const getAllReviews = async (req, res, next) => {
             .limit(limit);
 
 
-        // 🔥 Find the current user's submitted review if logged in
         let submittedReview;
         if (req.user && req.user.id) {
             submittedReview = await Review.findOne({
@@ -115,6 +114,35 @@ export const getAllReviews = async (req, res, next) => {
     }
 };
 
+// Update a review
+export const updateReview = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const { rating, img, text } = req.body;
+
+        const review = await Review.findByIdAndUpdate(
+            id,
+            { rating, img, text },
+            { new: true, runValidators: true }
+        );
+
+        if (!review) {
+            return res.status(404).json({
+                success: false,
+                message: 'Review not found'
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: 'Review updated successfully',
+            data: review
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
 // Delete a review
 export const deleteReview = async (req, res, next) => {
     try {
@@ -128,7 +156,7 @@ export const deleteReview = async (req, res, next) => {
             });
         }
 
-        res.json({
+        res.status(200).son({
             success: true,
             message: 'Review deleted successfully'
         });
