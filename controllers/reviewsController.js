@@ -58,29 +58,100 @@ export const createReview = async (req, res, next) => {
 };
 
 // Get all reviews (paginated, sorted by best rating)
+// export const getAllReviews = async (req, res, next) => {
+//     try {
+//         let { page = 1, limit = 10, sort } = req.query;
+//         page = parseInt(page);
+//         limit = parseInt(limit);
+//         const skip = (page - 1) * limit;
+
+//         const filter = req.params.business ? { business: req.params.business } : {};
+
+//         const sortOption = sort === 'rating'
+//             ? { rating: -1, createdAt: -1 } // sort by rating, then newest first
+//             : { createdAt: -1 };            // default sort: newest reviews first
+
+//         // const totalReviews = await Review.countDocuments(filter);
+
+//         const stats = await Review.aggregate([
+//             { $match: { business: new mongoose.Types.ObjectId(req.params.business) } },
+//             { $group: { _id: null, totalReviews: { $sum: 1 }, averageRating: { $avg: "$rating" } } }
+//         ]);
+
+//         const { totalReviews, averageRating } = stats.length > 0 ? stats[0] : { totalReviews: 0, averageRating: 0 };
+
+
+
+//         const reviews = await Review.find(filter)
+//             .populate('user', 'username email')
+//             .populate('business', 'name')
+//             .sort(sortOption)
+//             .skip(skip)
+//             .limit(limit);
+
+
+//         let submittedReview;
+//         if (req.user && req.user.id) {
+//             submittedReview = await Review.findOne({
+//                 user: req.user.id,
+//                 ...filter,
+//             })
+//                 .select('rating text img createdAt')
+//         }
+
+//         res.status(200).json({
+//             success: true,
+//             data: reviews,
+//             totalReviews,
+//             averageRating,
+//             submittedReview,
+//             totalPages: Math.ceil(totalReviews / limit),
+//             page,
+//             limit,
+//         });
+//     } catch (error) {
+//         next(error);
+//     }
+// };
+
+
 export const getAllReviews = async (req, res, next) => {
     try {
-        let { page = 1, limit = 10, sort } = req.query;
+        let { page = 1, limit = 10, sort, business, user } = req.query;
         page = parseInt(page);
         limit = parseInt(limit);
         const skip = (page - 1) * limit;
 
-        const filter = req.params.business ? { business: req.params.business } : {};
+        // Build dynamic filter
+        const filter = {};
+        if (business) {
+            filter.business = business;
+        }
+        if (user) {
+            filter.user = user;
+        }
 
         const sortOption = sort === 'rating'
-            ? { rating: -1, createdAt: -1 } // sort by rating, then newest first
-            : { createdAt: -1 };            // default sort: newest reviews first
+            ? { rating: -1, createdAt: -1 } // sort by rating first, then newest
+            : { createdAt: -1 };            // default: newest first
 
-        // const totalReviews = await Review.countDocuments(filter);
+        // Calculate stats if filtering by business
+        let totalReviews = 0;
+        let averageRating = 0;
+        
 
-        const stats = await Review.aggregate([
-            { $match: { business: new mongoose.Types.ObjectId(req.params.business) } },
-            { $group: { _id: null, totalReviews: { $sum: 1 }, averageRating: { $avg: "$rating" } } }
-        ]);
-
-        const { totalReviews, averageRating } = stats.length > 0 ? stats[0] : { totalReviews: 0, averageRating: 0 };
-
-
+        if (business && !user) {
+            const stats = await Review.aggregate([
+                { $match: { business: new mongoose.Types.ObjectId(business) } },
+                { $group: { _id: null, totalReviews: { $sum: 1 }, averageRating: { $avg: "$rating" } } }
+            ]);
+            if (stats.length > 0) {
+                totalReviews = stats[0].totalReviews;
+                averageRating = stats[0].averageRating;
+            }
+        } else {
+            totalReviews = await Review.countDocuments(filter);
+        }
 
         const reviews = await Review.find(filter)
             .populate('user', 'username email')
@@ -89,22 +160,20 @@ export const getAllReviews = async (req, res, next) => {
             .skip(skip)
             .limit(limit);
 
-
         let submittedReview;
-        if (req.user && req.user.id) {
+        if (req.user && req.user.id ,business, !user) {
             submittedReview = await Review.findOne({
                 user: req.user.id,
-                ...filter,
-            })
-                .select('rating text img createdAt')
+                business,
+            }).select('rating text img createdAt');
         }
 
         res.status(200).json({
             success: true,
             data: reviews,
             totalReviews,
-            averageRating,
-            submittedReview,
+            
+            submittedReview: submittedReview || undefined,
             totalPages: Math.ceil(totalReviews / limit),
             page,
             limit,
@@ -114,7 +183,12 @@ export const getAllReviews = async (req, res, next) => {
     }
 };
 
-// Update a review
+
+
+
+
+
+
 export const updateReview = async (req, res, next) => {
     try {
         const { id } = req.params;
