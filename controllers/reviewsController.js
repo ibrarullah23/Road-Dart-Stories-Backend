@@ -6,7 +6,7 @@ export const bulkCreateReviews = async (req, res, next) => {
     try {
         const reviews = req.body; // Expecting an array of review objects
 
-        
+
 
         const createdReviews = await Review.insertMany(reviews);
 
@@ -138,7 +138,7 @@ export const getAllReviews = async (req, res, next) => {
         // Calculate stats if filtering by business
         let totalReviews = 0;
         let averageRating = 0;
-        
+
 
         if (business && !user) {
             const stats = await Review.aggregate([
@@ -161,7 +161,7 @@ export const getAllReviews = async (req, res, next) => {
             .limit(limit);
 
         let submittedReview;
-        if (req.user && req.user.id ,business, !user) {
+        if (req.user && req.user.id, business, !user) {
             submittedReview = await Review.findOne({
                 user: req.user.id,
                 business,
@@ -172,7 +172,7 @@ export const getAllReviews = async (req, res, next) => {
             success: true,
             data: reviews,
             totalReviews,
-            
+            averageRating: user ? undefined : averageRating,
             submittedReview: submittedReview || undefined,
             totalPages: Math.ceil(totalReviews / limit),
             page,
