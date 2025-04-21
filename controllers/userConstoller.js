@@ -1,5 +1,6 @@
+import { cookieOptions } from '../constants/cookieOptions.js';
 import User from '../models/User.js';
-import { cleanFields } from '../utils/helper.js';
+import { cleanFields, generateAccessToken, generateRefreshToken } from '../utils/helper.js';
 import mongoose from 'mongoose';
 
 // Get all users with pagination
@@ -34,9 +35,9 @@ export const getUser = async (req, res) => {
         const user = await User.findOne({
             $or: [
                 { _id: mongoose.Types.ObjectId.isValid(id) ? id : null },
-              { username: id }
+                { username: id }
             ]
-          }).select('-password -__v');
+        }).select('-password -__v');
 
         if (!user) return res.status(404).json({ message: 'User not found' });
         res.status(200).json(user);
@@ -48,9 +49,85 @@ export const getUser = async (req, res) => {
 // Update User
 export const updateUser = async (req, res) => {
     try {
-        const user = await User.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true }).select('-password -__v');
-        if (!user) return res.status(404).json({ message: 'User not found' });
-        res.status(200).json({message: 'User updated successfully', data: user});
+        const {
+            firstname,
+            lastname,
+            gender,
+            dob,
+            state,
+            city,
+            country,
+            zipcode,
+            password,
+            username,
+            socials,
+            profileImg
+        } = req.body;
+        const { id } = req.user;
+
+        const user = await User.findById(id);
+        if (!user) {
+            return res.status(404).json({ success: false, message: 'User not found' });
+        }
+
+
+        Object.assign(user, {
+            firstname,
+            lastname,
+            gender,
+            dob,
+            password,
+            address: {
+                state: state || user.address.state,
+                city: city || user.address.city,
+                country: country || user.address.country,
+                zipcode: zipcode || user.address.zipcode,
+            },
+            username,
+            // socials,
+            profileImg
+        });
+        if (socials) {
+            user.socials = {
+                ...user.socials, // existing socials
+                ...socials       // new socials
+            };
+        }
+
+        await user.save();
+
+        if (username) {
+            const token = generateAccessToken(user);
+            const refreshToken = generateRefreshToken(user);
+            user.refreshToken = refreshToken;
+
+            await user.save();
+            res.cookie('token', token, cookieOptions)
+                .cookie('refreshToken', refreshToken, cookieOptions);
+        }
+
+
+        const userObj = user.toObject();
+        delete userObj.password;
+        delete userObj.__v;
+        delete userObj.refreshToken;
+
+        // const user = await User.findByIdAndUpdate(req.params.id, {
+        //     firstname,
+        //     lastname,
+        //     gender,
+        //     dob,
+        //     email,
+        //     password,
+        //     username,
+        //     address,
+        //     socials,
+        //     profileImg
+        // }, { new: true, runValidators: true }).select('-password -__v');
+        // if (!user) return res.status(404).json({ message: 'User not found' });
+
+
+        res.status(200).json({ message: 'User updated successfully', data: userObj });
     } catch (err) {
         res.status(400).json({ message: err.message });
     }

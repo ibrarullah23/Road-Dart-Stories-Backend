@@ -4,6 +4,15 @@ export function cleanFields(fieldsString = '') {
   return fieldsString.replace(/\s+/g, '').replace(/,/g, ' ');
 }
 
+export function validateURL(v) {
+  if (!v) return true; 
+  try {
+      new URL(v);
+      return true;
+  } catch (err) {
+      return false;
+  }
+}
 
 export const generateAccessToken = (user, ex = "1d") => {
   return jwt.sign(

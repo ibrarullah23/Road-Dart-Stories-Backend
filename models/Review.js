@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { validateURL } from '../utils/helper.js';
 
 const reviewSchema = new mongoose.Schema({
   user: {
@@ -18,7 +19,11 @@ const reviewSchema = new mongoose.Schema({
     max: 5
   },
   img: {
-    type: String
+    type: String,
+    validate: {
+      validator: validateURL,
+      message: 'Invalid URL format for img'
+    }
   },
   text: {
     type: String,

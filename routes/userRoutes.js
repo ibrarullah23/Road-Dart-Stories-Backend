@@ -1,11 +1,12 @@
 import express from 'express';
-import { deleteUser, getAllUsers, getUser, updateUser } from './../controllers/userConstoller.js';
+import {  getAllUsers, getUser, updateUser } from './../controllers/userConstoller.js';
+import { authMiddleware } from './../middlewares/authMiddleware.js';
 
 const router = express.Router();
 
 router.get('/', getAllUsers);
 router.get('/:id', getUser);
-router.patch('/:id', updateUser);
-router.delete('/:id', deleteUser);
+router.patch('/', authMiddleware, updateUser);
+// router.delete('/:id',authMiddleware, deleteUser);
 
 export default router;

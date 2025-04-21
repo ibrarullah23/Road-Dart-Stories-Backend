@@ -1,22 +1,15 @@
 import mongoose from 'mongoose';
 import bcrypt from "bcryptjs";
+import { validateURL } from '../utils/helper.js';
 
 const { Schema, model } = mongoose;
 
-function validateURL(v) {
-    if (!v) return true; // If no URL, skip validation (in case profile image is optional)
-    try {
-        new URL(v);
-        return true;
-    } catch (err) {
-        return false;
-    }
-}
+
 
 const userSchema = new Schema({
     firstname: { type: String, required: true },
     lastname: { type: String, required: true },
-    gender: { type: String, enum: ['Male', 'Female', 'Other'] },
+    gender: { type: String, enum: ['male', 'female', 'other'] },
     dob: { type: Date },
     email: {
         type: String,
@@ -39,7 +32,7 @@ const userSchema = new Schema({
         country: String,
         zipcode: String
     },
-    socials: { type: Map, of: String },
+    socials: { type: Object },
     profileImg: {
         type: String,
         validate: {
@@ -103,7 +96,7 @@ userSchema.pre('save', async function (next) {
     } catch (err) {
         console.error(err.message);
         next(err);
-    }
+    }   
 });
 
 const User = model('User', userSchema);
