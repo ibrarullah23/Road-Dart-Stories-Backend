@@ -132,6 +132,10 @@ export const loginUser = async (req, res) => {
             return res.status(404).json({ message: "User Not Found!" });
         }
 
+        if (!user.password) {
+            return res.status(401).json({ message: "Login with Google or Sign up!" });
+        }
+
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
             return res.status(401).json({ message: "Wrong Password!" });
@@ -180,6 +184,43 @@ export const verifyEmail = async (req, res) => {
         res.redirect('https://roaddartfrontend.vercel.app/?emailverification=success');
     } catch (error) {
         res.redirect('https://roaddartfrontend.vercel.app/?emailverification=failed');
+    }
+};
+
+
+export const updatePassword = async (req, res) => {
+    try {
+        const { currentPassword, newPassword } = req.body;
+
+        if (!currentPassword || !newPassword) {
+            return res.status(400).json({ message: "Please provide current and new passwords." });
+        }
+
+        const user = await User.findById(req.user.id).select('+password');
+        if (!user) {
+            return res.status(404).json({ message: "User not found." });
+        }
+
+        if (user.password) {
+            console.log("User");
+            const isMatch = await bcrypt.compare(currentPassword, user.password);
+            if (!isMatch) {
+                return res.status(401).json({ message: "Current password is incorrect." });
+            }
+        }
+
+        user.password = newPassword; // Password hashing handled in model pre-save
+        await user.save();
+
+        res.status(200).json({ message: "Password updated successfully." });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            error: {
+                message: "Server error",
+                details: error.message
+            }
+        });
     }
 };
 
