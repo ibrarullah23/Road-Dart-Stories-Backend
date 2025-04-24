@@ -190,10 +190,10 @@ export const verifyEmail = async (req, res) => {
 
 export const updatePassword = async (req, res) => {
     try {
-        const { currentPassword, newPassword } = req.body;
+        const {  newPassword } = req.body;
 
-        if (!currentPassword || !newPassword) {
-            return res.status(400).json({ message: "Please provide current and new passwords." });
+        if (!newPassword) {
+            return res.status(400).json({ message: "Please provide new passwords." });
         }
 
         const user = await User.findById(req.user.id).select('+password');
@@ -201,13 +201,14 @@ export const updatePassword = async (req, res) => {
             return res.status(404).json({ message: "User not found." });
         }
 
-        if (user.password) {
-            console.log("User");
-            const isMatch = await bcrypt.compare(currentPassword, user.password);
-            if (!isMatch) {
-                return res.status(401).json({ message: "Current password is incorrect." });
-            }
-        }
+        // if (user.password) {
+        //     console.log("User");
+        //     const isMatch = await bcrypt.compare(currentPassword, user.password);
+        //     if (!isMatch) {
+        //         return res.status(401).json({ message: "Current password is incorrect." });
+        //     }
+        // }
+        
 
         user.password = newPassword; // Password hashing handled in model pre-save
         await user.save();
