@@ -102,7 +102,7 @@ export const getAllBusinesses = async (req, res) => {
           averageRating: {
             $cond: [
               { $gt: [{ $size: '$reviews' }, 0] },
-              { $avg: '$reviews.rating' },
+              { $avg: '$reviews.ratings.overallRating' },
               0
             ]
           }
@@ -152,25 +152,6 @@ export const getAllBusinesses = async (req, res) => {
 // Get business by ID
 export const getBusinessById = async (req, res) => {
   try {
-    // const business = await Business.findById(req.params.id);
-
-
-    // if (!business) return res.status(404).json({ message: 'Business not found' });
-
-    // // average rating and total ratings using aggregation
-    // const reviewsAggregation = await Review.aggregate([
-    //   { $match: { businessId: business._id } },
-    //   { $group: { _id: null, avgRating: { $avg: '$rating' }, totalRatings: { $sum: 1 } } }
-    // ]);
-
-    // const averageRating = reviewsAggregation.length > 0 ? reviewsAggregation[0].avgRating : 0;
-    // const totalRatings = reviewsAggregation.length > 0 ? reviewsAggregation[0].totalRatings : 0;
-
-    // business.averageRating = averageRating.toFixed(1);
-    // business.totalRatings = totalRatings;
-    // res.status(200).json(business);
-
-
     const businessData = await Business.aggregate([
       { $match: { _id: new mongoose.Types.ObjectId(req.params.id) } }, // Match the business
       {
@@ -183,7 +164,7 @@ export const getBusinessById = async (req, res) => {
       },
       {
         $addFields: {
-          averageRating: { $ifNull: [{ $avg: "$reviews.rating" }, 0] },
+          averageRating: { $ifNull: [{ $avg: "$reviews.ratings.overallRating" }, 0] },
           totalRatings: { $size: "$reviews" }
         }
       },
