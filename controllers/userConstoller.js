@@ -58,7 +58,7 @@ export const updateUser = async (req, res) => {
             city,
             country,
             zipcode,
-            password,
+            phone,
             username,
             socials,
             profileImg
@@ -75,8 +75,8 @@ export const updateUser = async (req, res) => {
             firstname,
             lastname,
             gender,
+            phone,
             dob,
-            password,
             address: {
                 state: state || user.address.state,
                 city: city || user.address.city,
@@ -84,7 +84,6 @@ export const updateUser = async (req, res) => {
                 zipcode: zipcode || user.address.zipcode,
             },
             username,
-            // socials,
             profileImg
         });
         if (socials) {
@@ -105,7 +104,6 @@ export const updateUser = async (req, res) => {
             res.cookie('token', token, cookieOptions)
                 .cookie('refreshToken', refreshToken, cookieOptions);
         }
-
 
         const userObj = user.toObject();
         delete userObj.password;

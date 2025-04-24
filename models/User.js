@@ -26,6 +26,13 @@ const userSchema = new Schema({
         minlength: [8, 'Password must be at least 8 characters long']
     },
     username: { type: String, unique: [true, "Username already exists"] },
+    phone: {
+        type: String,
+        validate: {
+            validator: v => /^\+?[1-9]\d{1,14}$/.test(v),
+            message: "Invalid phone number format"
+        }
+    },
     address: {
         state: String,
         city: String,
