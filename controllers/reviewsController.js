@@ -230,7 +230,7 @@ export const getAllReviews = async (req, res, next) => {
             submittedReview = await Review.findOne({
                 user: req.user.id,
                 business,
-            }).select('rating text img createdAt');
+            }).select('ratings text img createdAt');
         }
 
         res.status(200).json({
