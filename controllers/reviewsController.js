@@ -67,8 +67,8 @@ export const bulkCreateReviews = async (req, res, next) => {
         // Optionally, validate each review (optional, you can skip if already validated earlier)
         const invalidReviews = updatedReviews.filter(review => {
             const { business, user, ratings, text } = review;
-            return !business || !user || !ratings || !text || 
-                   Object.values(ratings).some(value => typeof value !== 'number');
+            return !business || !user || !ratings || !text ||
+                Object.values(ratings).some(value => typeof value !== 'number');
         });
 
         if (invalidReviews.length > 0) {
@@ -116,6 +116,16 @@ export const createReview = async (req, res, next) => {
             img,
             text,
         } = req.body;
+
+        const businessExists = await Business.findById(business);
+        if (!businessExists) {
+            return res.status(404).json({
+                success: false,
+                error: {
+                    message: 'Business not found',
+                }
+            });
+        }
 
         const overallRating = Math.round(
             (boardCondition + throwingLaneConditions + lightingConditions + spaceAllocated + gamingAmbience) / 5 * 10
