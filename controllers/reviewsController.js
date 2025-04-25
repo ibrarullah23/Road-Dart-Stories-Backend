@@ -260,6 +260,10 @@ export const updateReview = async (req, res, next) => {
             img,
             text
         } = req.body;
+        const overallRating = Math.round(
+            (boardCondition + throwingLaneConditions + lightingConditions + spaceAllocated + gamingAmbience) / 5 * 10
+        ) / 10; // Round to 1 decimal
+
 
         const reviewData = {
             ratings: {
@@ -267,7 +271,8 @@ export const updateReview = async (req, res, next) => {
                 throwingLaneConditions,
                 lightingConditions,
                 spaceAllocated,
-                gamingAmbience
+                gamingAmbience,
+                overallRating
             },
             img,
             text
