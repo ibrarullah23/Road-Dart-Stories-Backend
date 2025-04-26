@@ -219,8 +219,8 @@ export const getAllReviews = async (req, res, next) => {
         }
 
         const reviews = await Review.find(filter)
-            .populate('user', 'username email')
-            .populate('business', 'name')
+            .populate('user', 'username email profileImg')
+            .populate('business', 'name media.logo')
             .sort(sortOption)
             .skip(skip)
             .limit(limit);
