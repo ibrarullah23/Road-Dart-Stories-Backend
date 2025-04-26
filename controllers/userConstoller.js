@@ -54,10 +54,12 @@ export const updateUser = async (req, res) => {
             lastname,
             gender,
             dob,
+
             state,
             city,
             country,
             zipcode,
+
             phone,
             username,
             socials,
@@ -71,29 +73,27 @@ export const updateUser = async (req, res) => {
         }
 
 
-        Object.assign(user, {
-            firstname,
-            lastname,
-            gender,
-            phone,
-            dob,
-            address: {
-                state: state || user.address.state,
-                city: city || user.address.city,
-                country: country || user.address.country,
-                zipcode: zipcode || user.address.zipcode,
-            },
-            username,
-            profileImg
-        });
-        if (socials) {
-            user.socials = {
-                ...user.socials, // existing socials
-                ...socials       // new socials
-            };
+        user.firstname = firstname || user.firstname;
+        user.lastname = lastname || user.lastname;
+        user.gender = gender || user.gender;
+        user.dob = dob || user.dob;
+        user.phone = phone || user.phone;
+        user.username = username || user.username;
+        user.profileImg = profileImg || user.profileImg;
+
+        user.address = {
+            state: state || user.address.state,
+            city: city || user.address.city,
+            country: country || user.address.country,
+            zipcode: zipcode || user.address.zipcode,
         }
 
-        await user.save();
+        user.socials = {
+            ...user.socials, // existing socials
+            ...socials       // new socials
+        };
+
+        const savedUser = await user.save();
 
         if (username) {
             const token = generateAccessToken(user);
@@ -105,7 +105,7 @@ export const updateUser = async (req, res) => {
                 .cookie('refreshToken', refreshToken, cookieOptions);
         }
 
-        const userObj = user.toObject();
+        const userObj = savedUser.toObject();
         delete userObj.password;
         delete userObj.__v;
         delete userObj.refreshToken;
