@@ -42,10 +42,10 @@ const userSchema = new Schema({
     socials: { type: Object },
     profileImg: {
         type: String,
-        validate: {
-            validator: validateURL,
-            message: 'Invalid URL format for profile image'
-        }
+        // validate: {
+        //     validator: validateURL,
+        //     message: 'Invalid URL format for profile image'
+        // }
     },
     status: {
         type: String,

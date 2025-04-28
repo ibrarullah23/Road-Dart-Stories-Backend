@@ -1,5 +1,6 @@
 import { cookieOptions } from '../constants/cookieOptions.js';
 import User from '../models/User.js';
+import { uploadImage } from '../services/uploadProfileImage.js';
 import { cleanFields, generateAccessToken, generateRefreshToken } from '../utils/helper.js';
 import mongoose from 'mongoose';
 
@@ -126,3 +127,31 @@ export const deleteUser = async (req, res) => {
         res.status(500).json({ message: err.message });
     }
 };
+
+
+
+export const updateProfileImage = async (req, res) => {
+    try {
+        const file = req.file;
+        const userId = req.user.id; 
+
+        if (!file) {
+            return res.status(400).json({ success: false, message: 'No file uploaded' });
+        }
+
+        const imageUrl = await uploadImage(file.buffer, userId);
+
+        console.log('Image URL:', imageUrl);
+        await User.findByIdAndUpdate(userId, { profileImg: imageUrl });
+
+        res.status(200).json({
+            success: true,
+            message: 'Profile image uploaded successfully',
+            profileImg: imageUrl,
+        });
+
+    } catch (error) {
+        console.error('Upload Profile Error:', error.message);
+        res.status(500).json({ success: false, message: error.message || 'Server error' });
+    }
+}
