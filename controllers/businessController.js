@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import Business from '../models/Business.js';
+import { uploadToCloudinary } from './../services/cloudinary.js';
 
 // Create new business
 export const createBusiness = async (req, res) => {
@@ -207,3 +208,85 @@ export const deleteBusiness = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
+
+// Upload business logo
+export const uploadBusinessLogo = async (req, res) => {
+  try {
+    const file = req.file;
+
+    if (!file) {
+      return res.status(400).json({ success: false, message: 'No file uploaded' });
+    }
+
+    const businessId = req.params.id;
+
+    const business = await Business.findById(businessId);
+
+    if (!business) {
+      return res.status(404).json({ message: 'Business not found' });
+    }
+
+    // if (req.user.id !== business.userid.toString()) {
+    //   return res.status(403).json({ message: 'Unauthorized to update this business' });
+    // }
+
+    const public_id = `business_logo/logo_${businessId}`;
+    const imageUrl = await uploadToCloudinary(file.buffer, public_id);
+
+    console.log('Logo URL:', imageUrl);
+
+    const updatedBusiness = await Business.findByIdAndUpdate(
+      businessId,
+      { 'media.logo': imageUrl },
+      { new: true }
+    );
+
+    if (!business) {
+      return res.status(404).json({ message: 'Business not found' });
+    }
+
+    res.status(200).json({ message: 'Logo uploaded successfully', logo: updatedBusiness.media.logo });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+
+// Upload a single business image
+export const uploadBusinessImage = async (req, res) => {
+  try {
+    const file = req.file;
+
+    if (!file) {
+      return res.status(400).json({ success: false, message: 'No file uploaded' });
+    }
+
+    const businessId = req.params.id;
+
+    const business = await Business.findById(businessId);
+    if (!business) {
+      return res.status(404).json({ message: 'Business not found' });
+    }
+
+    // if (req.user.id !== business.userid.toString()) {
+    //   return res.status(403).json({ message: 'Unauthorized' });
+    // }
+
+    const timestamp = Date.now();
+    const public_id = `business_images/image_${businessId}_${timestamp}`;
+    const imageUrl = await uploadToCloudinary(file.buffer, public_id);
+
+    business.media.images.push(imageUrl);
+    await business.save();
+
+    res.status(200).json({
+      message: 'Business image uploaded successfully',
+      images: business.media.images
+    });
+  } catch (error) {
+    console.error('Upload business image error:', error.message);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+

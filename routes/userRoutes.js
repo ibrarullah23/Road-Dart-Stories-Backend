@@ -8,7 +8,7 @@ const router = express.Router();
 router.get('/', getAllUsers);
 router.get('/:id', getUser);
 router.patch('/', authMiddleware, updateUser);
-router.post('/update-profile-img', authMiddleware, upload.single('profileImg'), updateProfileImage);
+router.patch('/update-profile-img', authMiddleware, upload.single('profileImg'), updateProfileImage);
 // router.delete('/:id',authMiddleware, deleteUser);
 
 export default router;

@@ -1,6 +1,6 @@
 import { cookieOptions } from '../constants/cookieOptions.js';
 import User from '../models/User.js';
-import { uploadImageToCloudinary } from '../services/cloudinary.js';
+import { deleteImage, uploadToCloudinary } from '../services/cloudinary.js';
 import { cleanFields, generateAccessToken, generateRefreshToken } from '../utils/helper.js';
 import mongoose from 'mongoose';
 
@@ -122,7 +122,9 @@ export const deleteUser = async (req, res) => {
     try {
         const user = await User.findByIdAndDelete(req.params.id);
         if (!user) return res.status(404).json({ message: 'User not found' });
-        res.status(200).json({ message: 'User deleted successfully' });
+
+        const imageDeleted = await deleteImage(user.profileImg);
+        res.status(200).json(imageDeleted);
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
@@ -139,7 +141,8 @@ export const updateProfileImage = async (req, res) => {
             return res.status(400).json({ success: false, message: 'No file uploaded' });
         }
 
-        const imageUrl = await uploadImageToCloudinary(file.buffer, userId);
+        const public_id = `user_profiles/profile_${userId}`;
+        const imageUrl = await uploadToCloudinary(file.buffer, public_id);
 
         console.log('Image URL:', imageUrl);
         await User.findByIdAndUpdate(userId, { profileImg: imageUrl });
