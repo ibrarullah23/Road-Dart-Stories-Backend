@@ -1,6 +1,6 @@
 import { cookieOptions } from '../constants/cookieOptions.js';
 import User from '../models/User.js';
-import { uploadImage } from '../services/uploadProfileImage.js';
+import { uploadImageToCloudinary } from '../services/cloudinary.js';
 import { cleanFields, generateAccessToken, generateRefreshToken } from '../utils/helper.js';
 import mongoose from 'mongoose';
 
@@ -139,7 +139,7 @@ export const updateProfileImage = async (req, res) => {
             return res.status(400).json({ success: false, message: 'No file uploaded' });
         }
 
-        const imageUrl = await uploadImage(file.buffer, userId);
+        const imageUrl = await uploadImageToCloudinary(file.buffer, userId);
 
         console.log('Image URL:', imageUrl);
         await User.findByIdAndUpdate(userId, { profileImg: imageUrl });
