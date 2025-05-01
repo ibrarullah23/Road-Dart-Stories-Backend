@@ -10,17 +10,19 @@ import {
   uploadBusinessImage
 } from '../controllers/businessController.js';
 import upload from '../middlewares/uploadMiddleware.js';
+import { authMiddleware } from './../middlewares/authMiddleware.js';
+import { validateCreate, validateUpdate } from '../validation/businessValidation.js';
 
 const router = express.Router();
 
 // CRUD Routes
-router.post('/', createBusiness);
 router.get('/', getAllBusinesses);
-router.post('/bulk', bulkCreateBusinesses);
 router.get('/:id', getBusinessById);
-router.patch('/:id', updateBusiness);
-router.patch('/upload-logo/:id', upload.single('businessLogo'), uploadBusinessLogo);
-router.patch('/upload-image/:id', upload.single('businessImg'), uploadBusinessImage);
-router.delete('/:id', deleteBusiness);
+router.post('/bulk', authMiddleware, bulkCreateBusinesses);
+router.post('/', authMiddleware, validateCreate, createBusiness);
+router.patch('/:id', authMiddleware, validateUpdate, updateBusiness);
+router.patch('/upload-logo/:id', authMiddleware, upload.single('businessLogo'), uploadBusinessLogo);
+router.patch('/upload-image/:id', authMiddleware, upload.single('businessImg'), uploadBusinessImage);
+router.delete('/:id', authMiddleware, deleteBusiness);
 
 export default router;

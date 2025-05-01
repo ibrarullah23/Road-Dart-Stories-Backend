@@ -5,9 +5,44 @@ import { uploadToCloudinary } from './../services/cloudinary.js';
 // Create new business
 export const createBusiness = async (req, res) => {
   try {
-    const business = new Business(req.body);
+    const {
+      name,
+      tagline,
+      shortDis,
+      category,
+      tags,
+      bordtype,
+      location
+    } = req.body;
+
+    const locationobject = {
+      geotag: {
+        lat: location?.geotag?.lat,
+        lng: location?.geotag?.lng
+      },
+      state: location?.state,
+      city: location?.city,
+      country: location?.country,
+      zipcode: location?.zipcode
+    };
+
+    const business = new Business({
+      userId: req.user.id,
+      name,
+      tagline,
+      shortDis,
+      category,
+      tags,
+      bordtype,
+      location: locationobject
+    });
+
     await business.save();
-    res.status(201).json(business);
+    res.status(201).json({
+      success: true,
+      message: 'Business created successfully',
+      data: business
+    });
   } catch (err) {
     res.status(400).json({ message: err.message });
   }
@@ -190,9 +225,16 @@ export const getBusinessById = async (req, res) => {
 // Update business by ID
 export const updateBusiness = async (req, res) => {
   try {
-    const business = await Business.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const business = await Business.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true
+    });
     if (!business) return res.status(404).json({ message: 'Business not found' });
-    res.status(200).json(business);
+    res.status(200).json({
+      success: true,
+      message: 'Business updated successfully',
+      data: business
+    });
   } catch (err) {
     res.status(400).json({ message: err.message });
   }
