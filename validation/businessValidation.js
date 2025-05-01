@@ -17,7 +17,7 @@ const createValidation = Joi.object({
         city: Joi.string().optional(),
         country: Joi.string().optional(),
         zipcode: Joi.string().optional()
-    }).required(),
+    }).optional(),
 
     // media: Joi.object({
     //     images: Joi.array().items(Joi.string()).optional(),
