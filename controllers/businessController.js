@@ -1,52 +1,172 @@
 import mongoose from 'mongoose';
 import Business from '../models/Business.js';
 import { uploadToCloudinary } from './../services/cloudinary.js';
+import { uploadMedia } from '../middlewares/uploadMiddleware.js';
+import { validateCreate } from '../validation/businessValidation.js';
 
 // Create new business
+// export const createBusiness = async (req, res) => {
+//   try {
+//     const {
+//       name,
+//       tagline,
+//       shortDis,
+//       category,
+//       tags,
+//       bordtype,
+//       location
+//     } = req.body;
+
+//     const locationobject = {
+//       geotag: {
+//         lat: location?.geotag?.lat,
+//         lng: location?.geotag?.lng
+//       },
+//       state: location?.state,
+//       city: location?.city,
+//       country: location?.country,
+//       zipcode: location?.zipcode
+//     };
+
+//     const business = new Business({
+//       userId: req.user.id,
+//       name,
+//       tagline,
+//       shortDis,
+//       category,
+//       tags,
+//       bordtype,
+//       location: locationobject
+//     });
+
+//     await business.save();
+//     res.status(201).json({
+//       success: true,
+//       message: 'Business created successfully',
+//       data: business
+//     });
+//   } catch (err) {
+//     res.status(400).json({ message: err.message });
+//   }
+// };
+
+
+// export const createBusiness = async (req, res) => {
+//   // Check if files are present in the request
+//   const { images, businessLogo } = req.files || {}; // Default to empty object if no files
+
+//   // Validate presence of images and businessLogo
+//   if (!images || images.length === 0) {
+//     return res.status(400).json({ message: 'Please upload at least one image.' });
+//   }
+//   if (!businessLogo || businessLogo.length === 0) {
+//     return res.status(400).json({ message: 'Please upload a business logo.' });
+//   }
+
+//   // Initialize arrays for media
+//   const uploadedImages = [];
+//   try {
+//     // Upload all images to Cloudinary
+//     for (let i = 0; i < images.length; i++) {
+//       const imageUrl = await uploadToCloudinary(images[i].buffer, `business_images/${Date.now()}`);
+//       uploadedImages.push(imageUrl); // Store image URL
+//       console.log('Image URL:', imageUrl); // Log the image URL
+//     }
+
+//     // Upload the business logo (only one logo)
+//     let logoUrl = await uploadToCloudinary(businessLogo[0].buffer, `business_logos/${Date.now()}`, 'image');
+
+//     // Validate the request body with Joi schema
+//     // const { error } = validateCreate(req.body);
+//     // if (error) {
+//     //   return res.status(400).json({ message: error.details[0].message });
+//     // }
+
+//     // Prepare the media object
+//     const media = {
+//       images: uploadedImages || [], // Array of image URLs
+//       video: req.body.video || undefined,  // Assuming video URL is passed in the request body
+//       logo: logoUrl || undefined // URL of the uploaded logo,
+//     };
+
+//     // Proceed with creating the business, include media URLs
+//     const newBusiness = {
+//       ...req.body,
+//       media: media,
+//       userid: req.user.id, 
+//     };
+
+//     // Save the new business to the database (e.g., using Mongoose)
+//     try {
+//       const business = await Business.create(newBusiness);
+//       res.status(201).json(business);
+//     } catch (err) {
+//       res.status(500).json({ message: 'Server error', error: err });
+//     }
+
+//   } catch (uploadError) {
+//     console.error('Error uploading files:', uploadError);
+//     res.status(500).json({ message: 'Failed to upload media', error: uploadError });
+//   }
+// };
+
+
+
+
 export const createBusiness = async (req, res) => {
   try {
-    const {
-      name,
-      tagline,
-      shortDis,
-      category,
-      tags,
-      bordtype,
-      location
-    } = req.body;
-
-    const locationobject = {
-      geotag: {
-        lat: location?.geotag?.lat,
-        lng: location?.geotag?.lng
-      },
-      state: location?.state,
-      city: location?.city,
-      country: location?.country,
-      zipcode: location?.zipcode
+    // Step 1: Create the business (without media)
+    const businessData = {
+      ...req.body,
+      userId: req.user.id,
     };
 
-    const business = new Business({
-      userId: req.user.id,
-      name,
-      tagline,
-      shortDis,
-      category,
-      tags,
-      bordtype,
-      location: locationobject
-    });
+    const business = await Business.create(businessData);
+
+    // Step 2: Upload media (images and logo)
+    const { images, businessLogo } = req.files || {};
+
+    const uploadedImages = [];
+    let logoUrl;
+
+    // Upload images if available
+    if (images && images.length > 0) {
+      for (let i = 0; i < images.length; i++) {
+        const imageUrl = await uploadToCloudinary(
+          images[i].buffer,
+          `business_images/${business._id}_${Date.now()}`
+        );
+        uploadedImages.push(imageUrl);
+      }
+    }
+
+    // Upload logo if available
+    if (businessLogo && businessLogo.length > 0) {
+      logoUrl = await uploadToCloudinary(
+        businessLogo[0].buffer,
+        `business_logos/${business._id}`
+      );
+    }
+
+    // Step 3: Update business with media URLs
+    business.media = {
+      images: uploadedImages,
+      logo: logoUrl,
+      video: req.body.video || undefined, // video can come as a URL in form-data
+    };
 
     await business.save();
-    res.status(201).json({
-      success: true,
-      message: 'Business created successfully',
-      data: business
-    });
+
+    // Return the updated business
+    res.status(201).json(business);
   } catch (err) {
-    res.status(400).json({ message: err.message });
+    console.error('Error creating business:', err);
+    res.status(500).json({ message: 'Failed to create business', error: err });
   }
 };
+
+
+
 
 export const bulkCreateBusinesses = async (req, res) => {
   try {

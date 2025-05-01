@@ -16,4 +16,11 @@ const upload = multer({
   limits: { fileSize: 5 * 1024 * 1024 }, // Optional: Max 5MB
 });
 
+
+export const uploadMedia = upload.fields([
+  { name: 'images', maxCount: 10 },  // for multiple images
+  { name: 'businessLogo', maxCount: 1 }  // for a single logo
+]);
+
+
 export default upload;

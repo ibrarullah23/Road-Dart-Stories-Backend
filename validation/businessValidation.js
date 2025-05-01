@@ -10,15 +10,82 @@ const createValidation = Joi.object({
     bordtype: Joi.string().valid('Steel Tip', 'Plastic', 'Both').required(),
     location: Joi.object({
         geotag: Joi.object({
-            lat: Joi.number().required(),
-            lng: Joi.number().required()
-        }).required(),
+            lat: Joi.number().optional(),
+            lng: Joi.number().optional()
+        }).optional(),
         state: Joi.string().optional(),
         city: Joi.string().optional(),
         country: Joi.string().optional(),
         zipcode: Joi.string().optional()
-    }).required()
+    }).required(),
+
+    // media: Joi.object({
+    //     images: Joi.array().items(Joi.string()).optional(),
+    //     video: Joi.string().optional(),
+    //     logo: Joi.string().optional()
+    // }).optional(),
+
+    timings: Joi.object({
+        mon: Joi.object({
+            open: Joi.string().optional(),
+            close: Joi.string().optional()
+        }).optional(),
+        tue: Joi.object({
+            open: Joi.string().optional(),
+            close: Joi.string().optional()
+        }).optional(),
+        wed: Joi.object({
+            open: Joi.string().optional(),
+            close: Joi.string().optional()
+        }).optional(),
+        thu: Joi.object({
+            open: Joi.string().optional(),
+            close: Joi.string().optional()
+        }).optional(),
+        fri: Joi.object({
+            open: Joi.string().optional(),
+            close: Joi.string().optional()
+        }).optional(),
+        sat: Joi.object({
+            open: Joi.string().optional(),
+            close: Joi.string().optional()
+        }).optional(),
+        sun: Joi.object({
+            open: Joi.string().optional(),
+            close: Joi.string().optional()
+        }).optional()
+    }).optional(),
+
+    socials: Joi.object({
+        facebook: Joi.string().optional(),
+        instagram: Joi.string().optional(),
+        twitter: Joi.string().optional(),
+        linkedin: Joi.string().optional()
+    }).optional(),
+
+    faqs: Joi.array().items(
+        Joi.object({
+            q: Joi.string().optional(),
+            a: Joi.string().optional()
+        })
+    ).optional(),
+
+    price: Joi.object({
+        category: Joi.string().valid('$', '$$', '$$$', '$$$$').optional(),
+        min: Joi.number().optional(),
+        max: Joi.number().optional()
+    }).optional(),
+
+    agelimit: Joi.number().optional(),
+
+    status: Joi.string().valid('Active', 'Closed Down', 'Coming Soon', 'Under Remodel').optional(),
+
+    validation: Joi.object({
+        date: Joi.date().optional(),
+        status: Joi.string().valid('Accredited', 'Validated', 'Not Validated').optional()
+    }).optional()
 });
+
 
 
 const updateBusinessValidation = Joi.object({

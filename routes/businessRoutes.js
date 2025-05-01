@@ -9,7 +9,7 @@ import {
   uploadBusinessLogo,
   uploadBusinessImage
 } from '../controllers/businessController.js';
-import upload from '../middlewares/uploadMiddleware.js';
+import upload, { uploadMedia } from '../middlewares/uploadMiddleware.js';
 import { authMiddleware } from './../middlewares/authMiddleware.js';
 import { validateCreate, validateUpdate } from '../validation/businessValidation.js';
 
@@ -19,7 +19,7 @@ const router = express.Router();
 router.get('/', getAllBusinesses);
 router.get('/:id', getBusinessById);
 router.post('/bulk', authMiddleware, bulkCreateBusinesses);
-router.post('/', authMiddleware, validateCreate, createBusiness);
+router.post('/', authMiddleware, uploadMedia, validateCreate, createBusiness);
 router.patch('/:id', authMiddleware, validateUpdate, updateBusiness);
 router.patch('/upload-logo/:id', authMiddleware, upload.single('businessLogo'), uploadBusinessLogo);
 router.patch('/upload-image/:id', authMiddleware, upload.single('businessImg'), uploadBusinessImage);
