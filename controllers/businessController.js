@@ -11,33 +11,33 @@ export const createBusiness = async (req, res) => {
 
     const business = await Business.create(businessData);
 
-    const { images, businessLogo } = req.files || {};
+    // const { images, businessLogo } = req.files || {};
 
-    const uploadedImages = [];
-    let logoUrl;
+    // const uploadedImages = [];
+    // let logoUrl;
 
-    if (images && images.length > 0) {
-      for (let i = 0; i < images.length; i++) {
-        const imageUrl = await uploadToCloudinary(
-          images[i].buffer,
-          `business_images/${business._id}_${Date.now()}`
-        );
-        uploadedImages.push(imageUrl);
-      }
-    }
+    // if (images && images.length > 0) {
+    //   for (let i = 0; i < images.length; i++) {
+    //     const imageUrl = await uploadToCloudinary(
+    //       images[i].buffer,
+    //       `business_images/${business._id}_${Date.now()}`
+    //     );
+    //     uploadedImages.push(imageUrl);
+    //   }
+    // }
 
-    if (businessLogo && businessLogo.length > 0) {
-      logoUrl = await uploadToCloudinary(
-        businessLogo[0].buffer,
-        `business_logos/${business._id}`
-      );
-    }
+    // if (businessLogo && businessLogo.length > 0) {
+    //   logoUrl = await uploadToCloudinary(
+    //     businessLogo[0].buffer,
+    //     `business_logos/${business._id}`
+    //   );
+    // }
 
-    business.media = {
-      images: uploadedImages,
-      logo: logoUrl,
-      video: req.body.video || undefined,
-    };
+    // business.media = {
+    //   images: uploadedImages,
+    //   logo: logoUrl,
+    //   video: req.body.video || undefined,
+    // };
 
     await business.save();
     res.status(201).json(business);

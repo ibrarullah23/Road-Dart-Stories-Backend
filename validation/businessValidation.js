@@ -60,7 +60,9 @@ const createValidation = Joi.object({
         facebook: Joi.string().optional(),
         instagram: Joi.string().optional(),
         twitter: Joi.string().optional(),
-        linkedin: Joi.string().optional()
+        linkedin: Joi.string().optional(),
+        youtube: Joi.string().optional(),
+        tiktok: Joi.string().optional(),
     }).optional(),
 
     faqs: Joi.array().items(
@@ -69,6 +71,9 @@ const createValidation = Joi.object({
             a: Joi.string().optional()
         })
     ).optional(),
+
+    website: Joi.string().uri().optional(),
+    phone: Joi.string().pattern(/^[0-9]{10,15}$/).optional(),
 
     price: Joi.object({
         category: Joi.string().valid('$', '$$', '$$$', '$$$$').optional(),
@@ -113,6 +118,10 @@ const updateBusinessValidation = Joi.object({
     //     logo: Joi.string().optional()
     // }).optional(),
 
+
+    website: Joi.string().uri().optional(),
+    phone: Joi.string().pattern(/^[0-9]{10,15}$/).optional(),
+
     timings: Joi.object({
         mon: Joi.object({
             open: Joi.string().optional(),
@@ -148,7 +157,9 @@ const updateBusinessValidation = Joi.object({
         facebook: Joi.string().optional(),
         instagram: Joi.string().optional(),
         twitter: Joi.string().optional(),
-        linkedin: Joi.string().optional()
+        linkedin: Joi.string().optional(),
+        youtube: Joi.string().optional(),
+        tiktok: Joi.string().optional(),
     }).optional(),
 
     faqs: Joi.array().items(

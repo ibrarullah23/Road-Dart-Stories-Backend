@@ -7,9 +7,9 @@ const businessSchema = new Schema({
   name: { type: String, required: true },
   tagline: { type: String ,  required: true },
   media: {
-    images: [String],
-    video: String,
-    logo: String
+    images: { type: [String], default: undefined },
+    video: { type: String, default: undefined },
+    logo: { type: String, default: undefined }
   },
   shortDis: { type: String , required: true },
   location: {
@@ -59,6 +59,8 @@ const businessSchema = new Schema({
     instagram: String,
     twitter: String,
     linkedin: String,
+    youtube: String,
+    tiktok: String,
   },
   faqs: [
     {
@@ -76,6 +78,7 @@ const businessSchema = new Schema({
   },
   agelimit: { type: Number },
   category: { type: String },
+  phone: {type: Number},
   tags: [String],
   status: {
     type: String,
