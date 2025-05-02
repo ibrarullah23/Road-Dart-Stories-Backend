@@ -9,11 +9,16 @@ import {
   uploadBusinessLogo,
   uploadBusinessImage
 } from '../controllers/businessController.js';
-import upload, { uploadMedia } from '../middlewares/uploadMiddleware.js';
+import upload from '../middlewares/uploadMiddleware.js';
 import { authMiddleware } from './../middlewares/authMiddleware.js';
 import { validateCreate, validateUpdate } from '../validation/businessValidation.js';
 
 const router = express.Router();
+
+const uploadMedia = upload.fields([
+  { name: 'images', maxCount: 10 },  // for multiple images
+  { name: 'businessLogo', maxCount: 1 }  // for a single logo
+]);
 
 // CRUD Routes
 router.get('/', getAllBusinesses);

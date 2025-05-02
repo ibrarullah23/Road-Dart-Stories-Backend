@@ -1,4 +1,5 @@
 import businessRoutes from './routes/businessRoutes.js';
+import eventRoutes from './routes/eventRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import contactRoutes from './routes/contactRoutes.js';
@@ -60,6 +61,7 @@ app.use(passport.initialize());
 
 app.get('/', (req, res) => res.json({ message: "✅ API is running... 3" }));
 app.use('/api/businesses', businessRoutes);
+app.use('/api/events', eventRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/contactus', contactRoutes);
