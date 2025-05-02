@@ -7,7 +7,9 @@ import {
     deleteEvent,
     bulkCreateEvents,
     uploadEventImage,
-    uploadEventBanner
+    uploadEventBanner,
+    addInterest,
+    getInterestedPeopleByEventId
 } from '../controllers/eventController.js';
 
 import upload from '../middlewares/uploadMiddleware.js';
@@ -30,5 +32,7 @@ router.patch('/:id', authMiddleware, validateUpdateEvent, updateEvent);
 router.patch('/upload-banner/:id', authMiddleware, upload.single('banner'), uploadEventBanner);
 router.patch('/upload-image/:id', authMiddleware, upload.single('images'), uploadEventImage);
 router.delete('/:id', authMiddleware, deleteEvent);
+router.post('/interested/:id', authMiddleware, addInterest);
+router.get('/interested/:id', getInterestedPeopleByEventId);
 
 export default router;

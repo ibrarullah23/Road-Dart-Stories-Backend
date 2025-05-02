@@ -23,10 +23,10 @@ const eventSchema = new Schema({
         country: String,
         zipcode: String
     },
-    timings: {
-        open: String,  // Format "HH:mm"
-        close: String
-    },
+    // timings: {
+    //     open: String,  // Format "HH:mm"
+    //     close: String
+    // },
     totalTickets: { type: Number },
     ticketLink: {
         type: String,

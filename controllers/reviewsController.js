@@ -2,30 +2,6 @@ import mongoose from "mongoose";
 import Review from "../models/Review.js";
 import Business from './../models/Business.js';
 
-// Bulk create reviews
-// export const bulkCreateReviews = async (req, res, next) => {
-//     try {
-//         const reviews = req.body; // Expecting an array of review objects
-
-//         const createdReviews = await Review.insertMany(reviews);
-
-//         res.status(201).json({
-//             success: true,
-//             message: 'Reviews created successfully',
-//             data: createdReviews
-//         });
-//     } catch (error) {
-//         if (error.code === 11000) {
-//             return res.status(409).json({
-//                 success: false,
-//                 error: {
-//                     message: 'Duplicate review entries detected',
-//                 }
-//             });
-//         }
-//         next(error);
-//     }
-// };
 
 
 export const bulkCreateReviews = async (req, res, next) => {

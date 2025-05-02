@@ -25,10 +25,10 @@ const createEventValidation = Joi.object({
         zipcode: Joi.string().optional()
     }).optional(),
 
-    timings: Joi.object({
-        open: Joi.string().optional(),
-        close: Joi.string().optional()
-    }).optional(),
+    // timings: Joi.object({
+    //     open: Joi.string().optional(),
+    //     close: Joi.string().optional()
+    // }).optional(),
 
     totalTickets: Joi.number().optional(),
 
@@ -84,10 +84,10 @@ const updateEventValidation = Joi.object({
         zipcode: Joi.string().optional()
     }).optional(),
 
-    timings: Joi.object({
-        open: Joi.string().optional(),
-        close: Joi.string().optional()
-    }).optional(),
+    // timings: Joi.object({
+    //     open: Joi.string().optional(),
+    //     close: Joi.string().optional()
+    // }).optional(),
 
     totalTickets: Joi.number().optional(),
 
