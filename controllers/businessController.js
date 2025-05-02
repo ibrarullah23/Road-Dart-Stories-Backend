@@ -318,3 +318,56 @@ export const uploadBusinessImage = async (req, res) => {
   }
 };
 
+
+// Upload multiple business images
+export const uploadBusinessMedia = async (req, res) => {
+
+  try {
+
+    const businessId = req.params.id;
+    const { images, businessLogo } = req.files || {};
+
+    const business = await Business.findById(businessId);
+    if (!business) {
+      return res.status(404).json({ message: 'Business not found' });
+    }
+
+    const uploadedImages = [];
+    let logoUrl;
+
+    if (images && images.length > 0) {
+      for (let i = 0; i < images.length; i++) {
+        const imageUrl = await uploadToCloudinary(
+          images[i].buffer,
+          `business_images/${businessId}_${Date.now()}`
+        );
+        uploadedImages.push(imageUrl);
+      }
+    }
+
+    if (businessLogo && businessLogo.length > 0) {
+      logoUrl = await uploadToCloudinary(
+        businessLogo[0].buffer,
+        `business_logos/${businessId}`
+      );
+    }
+
+    business.media = {
+      images: uploadedImages,
+      logo: logoUrl,
+      // video: req.body.video || undefined,
+    };
+    await business.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Business media uploaded successfully',
+      media: business.media
+    });
+
+  } catch (error) { 
+    next(error); 
+  }
+
+}
+
