@@ -12,28 +12,7 @@ export const createEvent = async (req, res) => {
 
         const event = await Event.create(eventData);
 
-        const { images, banner } = req.files || {};
-        const uploadedImages = [];
-        let bannerUrl;
 
-        if (images && images.length > 0) {
-            for (let i = 0; i < images.length; i++) {
-                const url = await uploadToCloudinary(images[i].buffer,
-                    `event_images/${event._id}_${Date.now()}`);
-                uploadedImages.push(url);
-            }
-        }
-
-        if (banner && banner.length > 0) {
-            bannerUrl = await uploadToCloudinary(
-                banner[0].buffer,
-                `event_banners/${event._id}`);
-        }
-
-        event.media = {
-            images: uploadedImages,
-            banner: bannerUrl
-        };
 
         await event.save();
         res.status(201).json({
@@ -249,3 +228,55 @@ export const getInterestedPeopleByEventId = async (req, res) => {
         res.status(500).json({ message: err.message });
     }
 };
+
+
+// Upload multiple business images
+export const uploadEventMedia = async (req, res) => {
+
+    try {
+
+        const eventId = req.params.id;
+        const { images, banner } = req.files || {};
+
+
+        const event = await Event.findById(eventId);
+        if (!event) {
+            return res.status(404).json({ message: 'Event not found' });
+        }
+        if (!images && !banner) {
+            return res.status(400).json({ message: 'No files uploaded' });
+        }
+        const uploadedImages = [];
+        let bannerUrl;
+
+        if (images && images.length > 0) {
+            for (let i = 0; i < images.length; i++) {
+                const url = await uploadToCloudinary(images[i].buffer,
+                    `event_images/${event._id}_${Date.now()}`);
+                uploadedImages.push(url);
+            }
+        }
+
+        if (banner && banner.length > 0) {
+            bannerUrl = await uploadToCloudinary(
+                banner[0].buffer,
+                `event_banners/${event._id}`);
+        }
+
+        event.media = {
+            images: uploadedImages,
+            banner: bannerUrl
+        };
+        await event.save();
+
+        res.status(200).json({
+            success: true,
+            message: 'Business media uploaded successfully',
+            media: business.media
+        });
+
+    } catch (error) {
+        next(error);
+    }
+
+}

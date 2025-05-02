@@ -332,6 +332,10 @@ export const uploadBusinessMedia = async (req, res) => {
       return res.status(404).json({ message: 'Business not found' });
     }
 
+    if(!images && !businessLogo) {
+      return res.status(400).json({ message: 'No files uploaded' });
+    }
+
     const uploadedImages = [];
     let logoUrl;
 
