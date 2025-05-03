@@ -16,32 +16,32 @@ function getPublicId(url) {
   return match ? match[1] : null;
 }
 
-export const uploadToCloudinary = async (base64String, public_id) => {
+export const uploadToCloudinary = async (fileBuffer, public_id) => {
   try {
-    // const result = await new Promise((resolve, reject) => {
-    //   const uploadStream = cloudinary.uploader.upload(
-    //     {
-    //       public_id,
-    //       overwrite: true, // Replaces the old image if exists
-    //       resource_type: 'image',
-    //     },
-    //     (error, result) => {
-    //       if (error) {
-    //         reject(error);
-    //       } else {
-    //         resolve(result);
-    //       }
-    //     }
-    //   );
+    const result = await new Promise((resolve, reject) => {
+      const uploadStream = cloudinary.uploader.upload(
+        {
+          public_id,
+          overwrite: true, // Replaces the old image if exists
+          resource_type: 'image',
+        },
+        (error, result) => {
+          if (error) {
+            reject(error);
+          } else {
+            resolve(result);
+          }
+        }
+      );
 
-    //   uploadStream.end(fileBuffer);
-    // });
-
-    const result = await cloudinary.uploader.upload(base64String, {
-      public_id,
-      overwrite: true,
-      resource_type: 'image'
+      uploadStream.end(fileBuffer);
     });
+
+    // const result = await cloudinary.uploader.upload(base64String, {
+    //   public_id,
+    //   overwrite: true,
+    //   resource_type: 'image'
+    // });
 
     // Return the URL of the uploaded image
     return result.secure_url;
