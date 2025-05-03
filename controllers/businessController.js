@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 import Business from '../models/Business.js';
 import { uploadToCloudinary } from './../services/cloudinary.js';
+import _ from 'lodash';
 
 export const createBusiness = async (req, res) => {
   try {
@@ -9,35 +10,36 @@ export const createBusiness = async (req, res) => {
       userId: req.user.id,
     };
 
+    const { images, logo } = req.body.media || {};
+    _.unset(businessData, 'media');
+
     const business = await Business.create(businessData);
 
-    // const { images, businessLogo } = req.files || {};
+    const uploadedImages = [];
+    let logoUrl;
 
-    // const uploadedImages = [];
-    // let logoUrl;
+    if (images && images.length > 0) {
+      for (let i = 0; i < images.length; i++) {
+        const imageUrl = await uploadToCloudinary(
+          images[i],
+          `business_images/${business._id}_${Date.now()}`
+        );
+        uploadedImages.push(imageUrl);
+      }
+    }
 
-    // if (images && images.length > 0) {
-    //   for (let i = 0; i < images.length; i++) {
-    //     const imageUrl = await uploadToCloudinary(
-    //       images[i].buffer,
-    //       `business_images/${business._id}_${Date.now()}`
-    //     );
-    //     uploadedImages.push(imageUrl);
-    //   }
-    // }
+    if (logo ) {
+      logoUrl = await uploadToCloudinary(
+        logo,
+        `business_logos/${business._id}`
+      );
+    }
 
-    // if (businessLogo && businessLogo.length > 0) {
-    //   logoUrl = await uploadToCloudinary(
-    //     businessLogo[0].buffer,
-    //     `business_logos/${business._id}`
-    //   );
-    // }
-
-    // business.media = {
-    //   images: uploadedImages,
-    //   logo: logoUrl,
-    //   video: req.body.video || undefined,
-    // };
+    business.media = {
+      images: uploadedImages,
+      logo: logoUrl,
+      video: req.body.video || undefined,
+    };
 
     await business.save();
     res.status(201).json(business);
@@ -332,7 +334,7 @@ export const uploadBusinessMedia = async (req, res) => {
       return res.status(404).json({ message: 'Business not found' });
     }
 
-    if(!images && !businessLogo) {
+    if (!images && !businessLogo) {
       return res.status(400).json({ message: 'No files uploaded' });
     }
 
@@ -369,8 +371,8 @@ export const uploadBusinessMedia = async (req, res) => {
       media: business.media
     });
 
-  } catch (error) { 
-    next(error); 
+  } catch (error) {
+    next(error);
   }
 
 }
