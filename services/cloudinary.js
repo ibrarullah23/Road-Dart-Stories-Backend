@@ -19,7 +19,7 @@ function getPublicId(url) {
 export const uploadToCloudinary = async (fileBuffer, public_id) => {
   try {
     const result = await new Promise((resolve, reject) => {
-      const uploadStream = cloudinary.uploader.upload(
+      const uploadStream = cloudinary.uploader.upload_stream(
         {
           public_id,
           overwrite: true, // Replaces the old image if exists
