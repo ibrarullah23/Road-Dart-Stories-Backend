@@ -334,36 +334,36 @@ export const uploadBusinessMedia = async (req, res) => {
       return res.status(404).json({ message: 'Business not found' });
     }
 
-    // if (!images && !businessLogo) {
-    //   return res.status(400).json({ message: 'No files uploaded' });
-    // }
+    if (!images && !businessLogo) {
+      return res.status(400).json({ message: 'No files uploaded' });
+    }
 
-    // const uploadedImages = [];
-    // let logoUrl;
+    const uploadedImages = [];
+    let logoUrl;
 
-    // if (images && images.length > 0) {
-    //   for (let i = 0; i < images.length; i++) {
-    //     const imageUrl = await uploadToCloudinary(
-    //       images[i].buffer,
-    //       `business_images/${businessId}_${Date.now()}`
-    //     );
-    //     uploadedImages.push(imageUrl);
-    //   }
-    // }
+    if (images && images.length > 0) {
+      for (let i = 0; i < images.length; i++) {
+        const imageUrl = await uploadToCloudinary(
+          images[i].buffer,
+          `business_images/${businessId}_${Date.now()}`
+        );
+        uploadedImages.push(imageUrl);
+      }
+    }
 
-    // if (businessLogo && businessLogo.length > 0) {
-    //   logoUrl = await uploadToCloudinary(
-    //     businessLogo[0].buffer,
-    //     `business_logos/${businessId}`
-    //   );
-    // }
+    if (businessLogo && businessLogo.length > 0) {
+      logoUrl = await uploadToCloudinary(
+        businessLogo[0].buffer,
+        `business_logos/${businessId}`
+      );
+    }
 
-    // business.media = {
-    //   images: uploadedImages,
-    //   logo: logoUrl,
-    //   // video: req.body.video || undefined,
-    // };
-    
+    business.media = {
+      images: uploadedImages,
+      logo: logoUrl,
+      // video: req.body.video || undefined,
+    };
+
     await business.save();
 
     res.status(200).json({
