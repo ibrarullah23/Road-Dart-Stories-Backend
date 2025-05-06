@@ -1,17 +1,18 @@
 import mongoose from 'mongoose';
+import Review from './Review.js';
 
 const { Schema, model } = mongoose;
 
 const businessSchema = new Schema({
   userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   name: { type: String, required: true },
-  tagline: { type: String ,  required: true },
+  tagline: { type: String, required: true },
   media: {
     images: { type: [String], default: undefined },
     video: { type: String, default: undefined },
     logo: { type: String, default: undefined }
   },
-  shortDis: { type: String , required: true },
+  shortDis: { type: String, required: true },
   location: {
     geotag: {
       lat: Number,
@@ -78,7 +79,7 @@ const businessSchema = new Schema({
   },
   agelimit: { type: Number },
   category: { type: String },
-  phone: {type: Number},
+  phone: { type: Number },
   tags: [String],
   status: {
     type: String,
@@ -100,5 +101,6 @@ const businessSchema = new Schema({
 }, { timestamps: true });
 
 const Business = model('Business', businessSchema);
+
 
 export default Business;

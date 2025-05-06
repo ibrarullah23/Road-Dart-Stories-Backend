@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 import Business from '../models/Business.js';
 import { uploadToCloudinary } from './../services/cloudinary.js';
 import _ from 'lodash';
+import Review from '../models/Review.js';
 
 export const createBusiness = async (req, res) => {
   try {
@@ -233,6 +234,7 @@ export const deleteBusiness = async (req, res) => {
   try {
     const business = await Business.findByIdAndDelete(req.params.id);
     if (!business) return res.status(404).json({ message: 'Business not found' });
+    await Review.deleteMany({ business: business._id });
     res.status(200).json({ message: 'Business deleted successfully' });
   } catch (err) {
     res.status(500).json({ message: err.message });
