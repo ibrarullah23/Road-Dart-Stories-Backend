@@ -1,6 +1,6 @@
 // routes/authRoutes.js
 import express from 'express';
-import { signup, logout, loginUser, googleAuth, getMe, updatePassword, verifyEmail } from '../controllers/authController.js';
+import { signup, logout, loginUser, googleAuth, getMe, updatePassword, verifyEmail, verifyEmailTemp } from '../controllers/authController.js';
 import passport from "passport";
 import { authMiddleware } from '../middlewares/authMiddleware.js';
 
@@ -11,6 +11,7 @@ router.post('/login', loginUser);
 router.post('/logout', authMiddleware, logout);
 router.post('/change-password', authMiddleware, updatePassword);
 router.get('/verify', verifyEmail);
+router.get('/tempverify', authMiddleware, verifyEmailTemp);
 router.get('/me', authMiddleware, getMe);
 
 // -------------------- Google OAuth --------------------

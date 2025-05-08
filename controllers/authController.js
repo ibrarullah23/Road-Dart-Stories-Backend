@@ -180,7 +180,19 @@ export const verifyEmail = async (req, res) => {
 
         const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
 
-        await User.findByIdAndUpdate(decoded.id, { isVerified: true });
+        await User.findByIdAndUpdate(decoded.id, { status: "verified" });
+
+        res.redirect(`${process.env.FRONTEND_URL}/?emailverification=success`);
+    } catch (error) {
+        console.error(error);
+        res.redirect(`${process.env.FRONTEND_URL}/?emailverification=failed`);
+    }
+};
+
+export const verifyEmailTemp = async (req, res) => {
+    try {
+        
+        await User.findByIdAndUpdate(req.user.id, { status: "verified" });
 
         res.redirect(`${process.env.FRONTEND_URL}/?emailverification=success`);
     } catch (error) {
