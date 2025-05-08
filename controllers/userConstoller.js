@@ -1,4 +1,6 @@
+import sendMail from '../config/mail.js';
 import { cookieOptions } from '../constants/cookieOptions.js';
+import { OTP } from '../constants/emailTemplets.js';
 import User from '../models/User.js';
 import { deleteImage, uploadToCloudinary } from '../services/cloudinary.js';
 import { cleanFields, generateAccessToken, generateRefreshToken } from '../utils/helper.js';
@@ -55,12 +57,13 @@ export const updateUser = async (req, res) => {
             lastname,
             gender,
             dob,
-
-            state,
-            city,
-            country,
-            zipcode,
-
+            socials: {
+                state,
+                city,
+                country,
+                zipcode
+            },
+            email,
             phone,
             username,
             socials,
@@ -73,7 +76,6 @@ export const updateUser = async (req, res) => {
             return res.status(404).json({ success: false, message: 'User not found' });
         }
 
-
         user.firstname = firstname || user.firstname;
         user.lastname = lastname || user.lastname;
         user.gender = gender || user.gender;
@@ -81,22 +83,26 @@ export const updateUser = async (req, res) => {
         user.phone = phone || user.phone;
         user.username = username || user.username;
         user.profileImg = profileImg || user.profileImg;
-
+        
         user.address = {
             state: state || user.address.state,
             city: city || user.address.city,
             country: country || user.address.country,
             zipcode: zipcode || user.address.zipcode,
         }
-
+        
         user.socials = {
             ...user.socials, // existing socials
             ...socials       // new socials
         };
-
+        
+        const isEmailChanged = email && email !== user.email;
+        if (isEmailChanged) {
+            user.email = email || user.email;
+        }
         const savedUser = await user.save();
-
-        if (username) {
+        
+        if (username || email) {
             const token = generateAccessToken(user);
             const refreshToken = generateRefreshToken(user);
             user.refreshToken = refreshToken;
@@ -104,6 +110,11 @@ export const updateUser = async (req, res) => {
             await user.save();
             res.cookie('token', token, cookieOptions)
                 .cookie('refreshToken', refreshToken, cookieOptions);
+        }
+
+        if (isEmailChanged) {
+            const tokenForOtp = generateAccessToken(user);
+            sendMail(OTP(user.email, user.firstname, tokenForOtp))
         }
 
         const userObj = savedUser.toObject();
@@ -135,7 +146,7 @@ export const deleteUser = async (req, res) => {
 export const updateProfileImage = async (req, res) => {
     try {
         const file = req.file;
-        const userId = req.user.id; 
+        const userId = req.user.id;
 
         if (!file) {
             return res.status(400).json({ success: false, message: 'No file uploaded' });

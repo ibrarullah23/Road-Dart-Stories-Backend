@@ -17,7 +17,7 @@ export const WELCOME = (email, firstname) => {
             <p>Welcome aboard — let's redefine what's possible together.</p>
             <p>Best regards,</p>
             <p>The Road Darts Team</p>
-            <a href="${process.env.ALLOWED_ORIGIN}" class="button">Get Started</a>
+            <a href="${process.env.FRONTEND_URL}" class="button">Get Started</a>
             `
     }
     return data
@@ -33,7 +33,7 @@ export const OTP = (email, firstname, token) => {
             <p>Dear ${firstname},</p>
             <p>Thank you for signing up with Road Dart Stories. To complete your verification, please click the link below:</p>
             <p>This link will expire in 24 hours.</p>
-            <a href="${process.env.BACKEND_URL}/verify?token=${token}" class="button">Verify Account</a>
+            <a href="${process.env.BACKEND_URL}/api/auth/verify?token=${token}" class="button">Verify Account</a>
             <p>If you did not request this, please ignore this email or contact our support team for assistance.</p>
             <p>Best regards,</p>
             <p>The Road Darts Team</p>

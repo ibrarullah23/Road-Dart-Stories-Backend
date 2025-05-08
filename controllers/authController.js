@@ -6,6 +6,7 @@ import _ from 'lodash';
 import sendMail from '../config/mail.js';
 import { OTP, WELCOME } from '../constants/emailTemplets.js';
 import Stripe from 'stripe';
+import jwt from 'jsonwebtoken';
 
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 
@@ -67,7 +68,7 @@ export const googleAuth = async (req, res) => {
         //     message: "Login Successful via Google",
         //     data: sanitizedUser,
         // });
-        res.redirect(`${process.env.ALLOWED_ORIGIN}?login=success&googleSignup=${isNewUser}`);
+        res.redirect(`${process.env.FRONTEND_URL}?login=success&googleSignup=${isNewUser}`);
     } catch (error) {
         console.log(error);
         res.status(500).json({
@@ -175,15 +176,16 @@ export const loginUser = async (req, res) => {
 export const verifyEmail = async (req, res) => {
     try {
         const { token } = req.query;
-        if (!token) return res.redirect('https://roaddartfrontend.vercel.app/?emailverification=failed');
+        if (!token) return res.redirect(`${process.env.FRONTEND_URL}/?emailverification=failed&error=token`);
 
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
 
         await User.findByIdAndUpdate(decoded.id, { isVerified: true });
 
-        res.redirect('https://roaddartfrontend.vercel.app/?emailverification=success');
+        res.redirect(`${process.env.FRONTEND_URL}/?emailverification=success`);
     } catch (error) {
-        res.redirect('https://roaddartfrontend.vercel.app/?emailverification=failed');
+        console.error(error);
+        res.redirect(`${process.env.FRONTEND_URL}/?emailverification=failed`);
     }
 };
 

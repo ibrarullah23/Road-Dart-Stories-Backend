@@ -132,7 +132,7 @@ router.post('/checkout', authMiddleware, async (req, res) => {
             ],
             allow_promotion_codes: true,
 
-            return_url: `${process.env.ALLOWED_ORIGIN}/return?session_id={CHECKOUT_SESSION_ID}`,
+            return_url: `${process.env.FRONTEND_URL}/return?session_id={CHECKOUT_SESSION_ID}`,
             metadata: {
                 userId,  // Store userId in metadata for future reference
             },
