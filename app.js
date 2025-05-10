@@ -33,8 +33,9 @@ app.use(express.json()); // Parse JSON bodies
 app.use(express.urlencoded({ extended: true }));
 
 const allowedOrigins = [
-    "http://localhost:3000", // Local frontend
-    process.env.FRONTEND_URL  // Production frontend
+    "http://localhost:3000", 
+    process.env.FRONTEND_URL,
+    process.env.FRONTEND_URL_WWW
 ];
 
 
