@@ -88,17 +88,21 @@ export const getMe = async (req, res) => {
             return res.status(404).json({ message: "User not found" });
         }
         let subscriptionData;
-        if (user.stripeSubscriptionId) {
-            const subscription = await stripe.subscriptions.retrieve(user.stripeSubscriptionId);
-            const productId = subscription.items.data[0].price.product;
-            const product = await stripe.products.retrieve(productId);  // Fetch the product details
-            const currentPeriodEnd = subscription.billing_cycle_anchor + 30 * 24 * 60 * 60;
-            subscriptionData = {
-                plan: product.name,
-                currentPeriodEnd,
-                isAutoRenew: !subscription.cancel_at_period_end,
-                status: subscription.status,
+        try {
+            if (user.stripeSubscriptionId) {
+                const subscription = await stripe.subscriptions.retrieve(user.stripeSubscriptionId);
+                const productId = subscription.items.data[0].price.product;
+                const product = await stripe.products.retrieve(productId);  // Fetch the product details
+                const currentPeriodEnd = subscription.billing_cycle_anchor + 30 * 24 * 60 * 60;
+                subscriptionData = {
+                    plan: product.name,
+                    currentPeriodEnd,
+                    isAutoRenew: !subscription.cancel_at_period_end,
+                    status: subscription.status,
+                }
             }
+        } catch (err) {
+            console.log(err.message);
         }
 
         res.status(200).json({ data: { user, subscription: subscriptionData } });
@@ -191,7 +195,7 @@ export const verifyEmail = async (req, res) => {
 
 export const verifyEmailTemp = async (req, res) => {
     try {
-        
+
         await User.findByIdAndUpdate(req.user.id, { status: "verified" });
 
         res.redirect(`${process.env.FRONTEND_URL}/?emailverification=success`);
@@ -204,7 +208,7 @@ export const verifyEmailTemp = async (req, res) => {
 
 export const updatePassword = async (req, res) => {
     try {
-        const {  newPassword } = req.body;
+        const { newPassword } = req.body;
 
         if (!newPassword) {
             return res.status(400).json({ message: "Please provide new passwords." });
@@ -222,7 +226,7 @@ export const updatePassword = async (req, res) => {
         //         return res.status(401).json({ message: "Current password is incorrect." });
         //     }
         // }
-        
+
 
         user.password = newPassword; // Password hashing handled in model pre-save
         await user.save();
