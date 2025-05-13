@@ -17,15 +17,29 @@ router.get('/plans', async (req, res) => {
 
         // Combine product and price data
         const plans = products.data.map(product => {
-            const priceObj = prices.data.find(price => price.product === product.id);
+            const priceObj = prices.data.filter(price => price.product === product.id).reduce((acc, price) => {
+                if (price.recurring?.interval === 'month') {
+                    acc.monthly = {
+                        priceId: price.id,
+                        amount: price.unit_amount,
+                        currency: price.currency,
+                    };
+                } else if (price.recurring?.interval === 'year') {
+                    acc.yearly = {
+                        priceId: price.id,
+                        amount: price.unit_amount,
+                        currency: price.currency,
+                    };
+                }
+                return acc;
+            }, {});
+
             return {
                 id: product.id,
                 name: product.name,
-                description: product.description || '', // Fetch marketing description
-                features: product.marketing_features, // Fetch marketing features from metadata
-                price: priceObj?.unit_amount || 0,
-                priceId: priceObj?.id || null,
-                currency: priceObj?.currency || 'usd',
+                description: product.description,
+                features: product.marketing_features,
+                prices: priceObj, // Include both yearly and monthly prices from acc
             };
         });
 
@@ -48,11 +62,11 @@ router.post('/apply-promo', async (req, res) => {
         if (promo.data.length > 0) {
             const discount = promo.data[0].coupon.percent_off;
             const newAmount = Math.round(price.unit_amount * (1 - discount / 100));
-            return res.json({ 
-                success: true, 
-                newAmount, 
-                discount, 
-                originalAmount: price.unit_amount 
+            return res.json({
+                success: true,
+                newAmount,
+                discount,
+                originalAmount: price.unit_amount
             });
         }
         return res.json({ success: false });
@@ -219,7 +233,7 @@ router.get('/checkout/:sessionId', async (req, res) => {
 });
 
 
-router.post('/webhook', bodyParser.raw({ type: 'application/json' }), stripeWebhookFn );
+router.post('/webhook', bodyParser.raw({ type: 'application/json' }), stripeWebhookFn);
 
 
 // Endpoint for canceling subscription
