@@ -7,6 +7,7 @@ import sendMail from '../config/mail.js';
 import { OTP, WELCOME } from '../constants/emailTemplets.js';
 import Stripe from 'stripe';
 import jwt from 'jsonwebtoken';
+import { getStripeSubscriptionIdByEmail } from '../utils/stripe.js';
 
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 
@@ -33,7 +34,16 @@ export const signup = async (req, res) => {
 
         // Save refreshToken in the user document
         user.refreshToken = refreshToken;
+
+
+        const stripeSubscriptionId = await getStripeSubscriptionIdByEmail(user.email);
+        if(stripeSubscriptionId){
+            user.role = 'owner';
+            user.stripeSubscriptionId = stripeSubscriptionId;
+        }
         await user.save();
+
+
 
         res
             .cookie('token', token, cookieOptions)
