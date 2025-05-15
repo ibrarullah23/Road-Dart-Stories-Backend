@@ -108,19 +108,24 @@ router.post('/create-payment-intent', async (req, res) => {
 
 
 
-router.post('/checkout', authMiddleware, async (req, res) => {
-    const { priceId } = req.body;
-    const userId = req.user.id;  // Assuming userId comes from authenticated request
-    const email = req.user.email;  // Optional, you can use email in the metadata or for other purposes
+router.post('/checkout', async (req, res) => {
+    const { priceId , email, promoCode} = req.body;
+    // const userId = req.user.id;  // Assuming userId comes from authenticated request
+    // const email = req.user.email;  // Optional, you can use email in the metadata or for other purposes
 
     if (!priceId) {
         return res.status(400).json({ error: 'Missing priceId in request body' });
     }
 
+    if (!email){
+        return res.status(400).json({ error: 'Missing email in request body' });
+    }
+
     try {
         // 1. Check if the customer exists using userId metadata
         const customers = await stripe.customers.list({
-            email,  // Use email to search for an existing customer
+            email: email.trim(),
+            limit: 1
         });
 
         let customer = customers.data.length ? customers.data[0] : null;
@@ -129,7 +134,7 @@ router.post('/checkout', authMiddleware, async (req, res) => {
             // If no customer exists, create a new one
             customer = await stripe.customers.create({
                 email,  // Optional: you can skip or store email as metadata if needed
-                metadata: { userId },  // Attach userId as metadata for future reference
+                // metadata: { userId },  // Attach userId as metadata for future reference
             });
         }
 
@@ -144,11 +149,20 @@ router.post('/checkout', authMiddleware, async (req, res) => {
                     quantity: 1,
                 },
             ],
-            allow_promotion_codes: true,
+            allow_promotion_codes: promoCode ? undefined: true,
+            discounts: promoCode
+                ? [
+                    {
+                      promotion_code: (
+                        await stripe.promotionCodes.list({ code: promoCode, active: true })
+                      ).data[0]?.id,
+                    },
+                  ]
+                : [],
 
             return_url: `${process.env.FRONTEND_URL}/return?session_id={CHECKOUT_SESSION_ID}`,
             metadata: {
-                userId,  // Store userId in metadata for future reference
+                email: email.trim(), 
             },
         });
 
@@ -166,7 +180,7 @@ router.post('/checkout', authMiddleware, async (req, res) => {
 
 // Fetch session status after payment
 router.get("/session_status", async (req, res) => {
-    const sessionId = req.query.session_id;
+    const sessionId = req.query.sessionId;
     try {
         const session = await stripe.checkout.sessions.retrieve(sessionId);
         res.send({
