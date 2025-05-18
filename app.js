@@ -1,4 +1,5 @@
 import businessRoutes from './routes/businessRoutes.js';
+import promotionRoutes from './routes/promotionRoutes.js';
 import eventRoutes from './routes/eventRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 import authRoutes from './routes/authRoutes.js';
@@ -68,6 +69,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/contactus', contactRoutes);
 app.use('/api/subscription', subscriptionRoutes); 
 app.use('/api/reviews', reviewRoutes); 
+app.use('/api/promotion', promotionRoutes); 
 
 
 // =========================== Routes ===========================
