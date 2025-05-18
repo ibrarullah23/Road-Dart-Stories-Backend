@@ -381,3 +381,46 @@ export const uploadBusinessMedia = async (req, res) => {
   }
 }
 
+
+// Create or Update Promotion
+export const upsertPromotion = async (req, res) => {
+  try {
+    const { title, description } = req.body;
+
+    const business = await Business.findByIdAndUpdate(
+      req.params.id,
+      { promotion: { title, description } },
+      { new: true, runValidators: true }
+    );
+
+    if (!business) return res.status(404).json({ message: 'Business not found' });
+
+    res.status(200).json({
+      success: true,
+      message: 'Promotion created/updated successfully',
+      data: business.promotion
+    });
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
+};
+
+// Delete Promotion
+export const deletePromotion = async (req, res) => {
+  try {
+    const business = await Business.findByIdAndUpdate(
+      req.params.id,
+      { $unset: { promotion: "" } },
+      { new: true }
+    );
+
+    if (!business) return res.status(404).json({ message: 'Business not found' });
+
+    res.status(200).json({
+      success: true,
+      message: 'Promotion deleted successfully'
+    });
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
+};
