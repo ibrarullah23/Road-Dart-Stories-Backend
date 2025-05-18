@@ -123,20 +123,18 @@ router.post('/checkout', async (req, res) => {
             standard: "standard-1-month",
             premium: "premium-1-month"
         },
-        DARTSOCIETY: {
+        DARTVENUE: {
             basic: "basic-1-month",
             standard: "standard-1-month",
             premium: "premium-1-month"
         },
         FREEAD365: {
-            basic: "basic-1-month",
-            standard: "standard-1-month",
-            premium: "premium-1-month"
+            standard: "free-ad-365"
         },
     }
 
     const promoCodeKey = toUpper(promoCode);
-    const couponId = discountamount[promoCodeKey]?.[plan ?? "basic"];
+    const couponId = discountamount[promoCodeKey]?.[plan];
     const selectedDiscount = couponId ? [{ coupon: couponId }] : [];
 
     if (!priceId) {
