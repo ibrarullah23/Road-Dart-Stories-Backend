@@ -220,9 +220,6 @@ router.get("/session_status", async (req, res) => {
 });
 
 
-
-
-
 // Assuming you're using Express and have the stripe instance set up
 router.get('/', authMiddleware, async (req, res) => {
     const userId = req.user.id; // Assuming you use middleware to get logged in user
