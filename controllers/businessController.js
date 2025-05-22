@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 import Business from '../models/Business.js';
-import { uploadToCloudinary } from './../services/cloudinary.js';
+import { deleteImage, uploadToCloudinary } from './../services/cloudinary.js';
 import _ from 'lodash';
 import Review from '../models/Review.js';
 
@@ -290,9 +290,9 @@ export const uploadBusinessLogo = async (req, res) => {
 // Upload a single business image
 export const uploadBusinessImage = async (req, res) => {
   try {
-    const file = req.file;
+    const files = req.files?.images;
 
-    if (!file) {
+    if (!files || files.length === 0) {
       return res.status(400).json({ success: false, message: 'No file uploaded' });
     }
 
@@ -307,11 +307,17 @@ export const uploadBusinessImage = async (req, res) => {
     //   return res.status(403).json({ message: 'Unauthorized' });
     // }
 
-    const timestamp = Date.now();
-    const public_id = `business_images/image_${businessId}_${timestamp}`;
-    const imageUrl = await uploadToCloudinary(file.buffer, public_id);
+    const uploadedImageUrls = [];
 
-    business.media.images.push(imageUrl);
+    for (const file of files) {
+      const timestamp = Date.now();
+      const public_id = `business_images/image_${businessId}_${timestamp}`;
+      const imageUrl = await uploadToCloudinary(file.buffer, public_id);
+      uploadedImageUrls.push(imageUrl);
+    }
+
+    // Add all new image URLs to media.images array
+    business.media.images.push(...uploadedImageUrls);
     await business.save();
 
     res.status(200).json({
@@ -326,19 +332,19 @@ export const uploadBusinessImage = async (req, res) => {
 
 
 // Upload multiple business images
-export const uploadBusinessMedia = async (req, res) => {
+export const uploadBusinessMedia = async (req, res, next) => {
 
   try {
 
     const businessId = req.params.id;
-    const { images, businessLogo } = req.files || {};
+    const { images, businessLogo, businessCover } = req.files || {};
 
     const business = await Business.findById(businessId);
     if (!business) {
       return res.status(404).json({ message: 'Business not found' });
     }
 
-    if (!images && !businessLogo) {
+    if (!images && !businessLogo && !businessCover) {
       return res.status(400).json({ message: 'No files uploaded' });
     }
 
@@ -353,6 +359,7 @@ export const uploadBusinessMedia = async (req, res) => {
         );
         uploadedImages.push(imageUrl);
       }
+      business.media.images = uploadedImages;
     }
 
     if (businessLogo && businessLogo.length > 0) {
@@ -360,13 +367,23 @@ export const uploadBusinessMedia = async (req, res) => {
         businessLogo[0].buffer,
         `business_logos/${businessId}`
       );
+      business.media.logo = logoUrl;
+    }
+    
+    let coverUrl;
+    if (businessCover && businessCover.length > 0) {
+      coverUrl = await uploadToCloudinary(
+        businessCover[0].buffer,
+        `business_cover/${businessId}`
+      );
+      business.media.cover = coverUrl;
     }
 
-    business.media = {
-      images: uploadedImages,
-      logo: logoUrl,
-      // video: req.body.video || undefined,
-    };
+    // business.media = {
+    //   images: uploadedImages.length ? uploadedImages : business.media.images,
+    //   logo: logoUrl || business.media.logo,
+    //   // video: req.body.video || undefined,
+    // };
 
     await business.save();
 
@@ -380,6 +397,68 @@ export const uploadBusinessMedia = async (req, res) => {
     next(error);
   }
 }
+
+
+
+
+export const deleteBusinessMedia = async (req, res, next) => {
+  try {
+    const businessId = req.params.id;
+    const { url } = req.body;
+
+    if (!url) {
+      return res.status(400).json({ message: 'Media URL is required' });
+    }
+
+    const business = await Business.findById(businessId);
+    if (!business) {
+      return res.status(404).json({ message: 'Business not found' });
+    }
+
+    let updated = false;
+
+    if (business.media.images.includes(url)) {
+      business.media.images = business.media.images.filter(img => img !== url);
+      updated = true;
+    }
+
+    if (business.media.logo === url) {
+      business.media.logo = undefined;
+      updated = true;
+    }
+
+    if (business.media.cover === url) {
+      business.media.cover = undefined;
+      updated = true;
+    }
+
+    if (!updated) {
+      return res.status(404).json({ message: 'URL not found in business media' });
+    }
+
+    // Delete from Cloudinary using your function
+    const deleteResult = await deleteImage(url);
+
+    if (!deleteResult.success) {
+      // Optionally: log or send failure message, but still update DB
+      console.warn(deleteResult.message);
+    }
+
+    await business.save();
+
+    return res.status(200).json({
+      success: true,
+      message: 'Media deleted successfully',
+      media: business.media,
+    });
+
+  } catch (error) {
+    next(error);
+  }
+};
+
+
+
 
 
 // Create or Update Promotion
