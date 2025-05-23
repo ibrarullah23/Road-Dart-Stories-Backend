@@ -4,7 +4,7 @@ import { generateAccessToken, generateRefreshToken } from '../utils/helper.js';
 import { cookieOptions } from '../constants/cookieOptions.js';
 import _ from 'lodash';
 import sendMail from '../config/mail.js';
-import { OTP, WELCOME } from '../constants/emailTemplets.js';
+import { ForgotPasswordEmail, OTP, WELCOME } from '../constants/emailTemplets.js';
 import Stripe from 'stripe';
 import jwt from 'jsonwebtoken';
 import { getStripeSubscriptionIdByEmail } from '../utils/stripe.js';
@@ -44,12 +44,19 @@ export const signup = async (req, res) => {
         }
         await user.save();
 
+
+        const sanitizedUser = _.omit(user.toObject(), ['password', 'refreshToken']);
+
         res.cookie('token', token, cookieOptions);
         res.cookie('refreshToken', refreshToken, cookieOptions)
 
-        res.status(201).json({ message: "User registered successfully" });
-
         sendMail(OTP(user.email, user.firstname, tokenForOtp))
+
+        res.status(201).json({
+            message: "User registered successfully",
+            data: sanitizedUser,
+        });
+
     } catch (error) {
         console.log(error.message);
         res.status(500).json({
@@ -59,6 +66,37 @@ export const signup = async (req, res) => {
         });
     }
 };
+
+
+
+export const resendVerificationEmail = async (req, res) => {
+    try {
+        const { email } = req.body;
+
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        const tokenForOtp = generateAccessToken(user);
+
+        sendMail(OTP(user.email, user.firstname, tokenForOtp))
+
+        res.status(200).json({
+            message: "Verification Email Sent successfully",
+        });
+
+    } catch (error) {
+        console.log(error.message);
+        res.status(500).json({
+            error: {
+                message: error.message,
+            }
+        });
+    }
+};
+
+
 
 export const googleAuth = async (req, res) => {
     try {
@@ -181,9 +219,9 @@ export const loginUser = async (req, res) => {
         res.cookie('refreshToken', refreshToken, cookieOptions)
 
         res.status(200).json({
-                message: "Login Successful",
-                data: sanitizedUser,
-            });
+            message: "Login Successful",
+            data: sanitizedUser,
+        });
 
     } catch (err) {
         console.error(err);
@@ -267,8 +305,18 @@ export const logout = async (req, res) => {
     // For token-based auth, logout is handled on frontend (token removal)
     await User.findByIdAndUpdate(req.user.id, { $unset: { refreshToken: "" } });
     // Clear cookies
-    res.clearCookie('token', cookieOptions);
-    res.clearCookie('refreshToken', cookieOptions);
+    res.clearCookie('token', {
+    ...cookieOptions,
+    maxAge: 0,
+    expires: new Date(0),
+  });
+    res.clearCookie('refreshToken', {
+    ...cookieOptions,
+    maxAge: 0,
+    expires: new Date(0),
+  });
+    // res.clearCookie('token', cookieOptions);
+    // res.clearCookie('refreshToken', cookieOptions);
     res.status(200).json({ message: "Logged out successfully" });
 };
 
@@ -296,5 +344,73 @@ export const verifyCaptcha = async (req, res) => {
     } catch (error) {
         console.error('Captcha verification error:', error.message);
         res.status(500).json({ success: false, message: 'Verification failed' });
+    }
+};
+
+
+
+export const forgotPassword = async (req, res) => {
+    try {
+        const { email } = req.body;
+
+        if (!email) {
+            return res.status(400).json({ message: "Email is required." });
+        }
+
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(404).json({ message: "User not found with this email." });
+        }
+
+        const token = generateAccessToken(user, "1h")
+
+        // Send reset password email
+        sendMail(ForgotPasswordEmail(user.email, token));
+
+        res.status(200).json({ message: "Password reset email sent successfully." });
+    } catch (error) {
+        console.error("Forgot password error:", error);
+        res.status(500).json({
+            error: {
+                message: "Server error",
+                details: error.message
+            }
+        });
+    }
+};
+
+
+export const resetPassword = async (req, res) => {
+    try {
+        const { token } = req.query;
+        const { newPassword } = req.body;
+
+        if (!token) {
+            return res.status(400).json({ message: "Reset token is missing." });
+        }
+
+        if (!newPassword) {
+            return res.status(400).json({ message: "New password is required." });
+        }
+
+        const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+        const user = await User.findById(decoded.id).select('+password');
+
+        if (!user) {
+            return res.status(404).json({ message: "User not found." });
+        }
+
+        user.password = newPassword; // Will be hashed in pre-save middleware
+        await user.save();
+
+        res.status(200).json({ message: "Password has been reset successfully." });
+    } catch (error) {
+        console.error("Reset password error:", error);
+        res.status(500).json({
+            error: {
+                message: "Server error",
+                details: error.message
+            }
+        });
     }
 };
