@@ -130,7 +130,7 @@ export const googleAuth = async (req, res) => {
 
 export const getMe = async (req, res) => {
     try {
-        let permissions = {
+        const permissionsData = {
             "Basic Plan": {
                 maxListings: 1,
             },
@@ -138,9 +138,11 @@ export const getMe = async (req, res) => {
                 maxListings: 3,
             },
             "Premium Plan": {
-                maxListings: 5,
+                maxListings: 9,
             },
         }
+        let permissions = undefined; 
+        
         const user = await User.findById(req.user.id).select('-password -__v');
         if (!user) {
             return res.status(404).json({ message: "User not found" });
@@ -158,7 +160,7 @@ export const getMe = async (req, res) => {
                     isAutoRenew: !subscription.cancel_at_period_end,
                     status: subscription.status,
                 }
-                permissions = (subscription.status === "active") ? permissions[product.name] : undefined;
+                permissions = (subscription.status === "active") ? permissionsData[product.name] : undefined;
             }
         } catch (err) {
             console.log(err.message);
