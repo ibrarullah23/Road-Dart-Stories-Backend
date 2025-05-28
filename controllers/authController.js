@@ -4,7 +4,7 @@ import { generateAccessToken, generateRefreshToken } from '../utils/helper.js';
 import { cookieOptions } from '../constants/cookieOptions.js';
 import _ from 'lodash';
 import sendMail from '../config/mail.js';
-import { ForgotPasswordEmail, OTP, WELCOME } from '../constants/emailTemplets.js';
+import { ForgotPasswordEmail, NEW_USER_SIGNUP, OTP, WELCOME } from '../constants/emailTemplets.js';
 import Stripe from 'stripe';
 import jwt from 'jsonwebtoken';
 import { getStripeSubscriptionIdByEmail } from '../utils/stripe.js';
@@ -14,7 +14,7 @@ const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 
 export const signup = async (req, res) => {
     try {
-        const { firstname, lastname, email, password, username, profileImg } = req.body;
+        const { firstname, lastname, email, password, username, profileImg , phone} = req.body;
 
         // Check if email exists
         // const existingUser = await User.findOne({ email });
@@ -23,7 +23,7 @@ export const signup = async (req, res) => {
             return res.status(400).json({ message: "Password is required" });
 
         // Create User (password hashing handled in model pre-save)
-        const user = new User({ firstname, lastname, email: email.trim(), password, username, profileImg });
+        const user = new User({ firstname, lastname, email: email.trim(), password, username, profileImg, phone });
         // await user.save();
 
 
@@ -51,6 +51,7 @@ export const signup = async (req, res) => {
         res.cookie('refreshToken', refreshToken, cookieOptions)
 
         sendMail(OTP(user.email, user.firstname, tokenForOtp))
+        sendMail(NEW_USER_SIGNUP(user.email, user.firstname))
 
         res.status(201).json({
             message: "User registered successfully",
